@@ -1,0 +1,9 @@
+@extends('site')
+@component('searchbar')
+@slot('terms')
+    {{$terms['text']}}
+@endslot
+@slot('selected_archive')
+    {{$terms['index']}}
+@endslot
+@endcomponent
