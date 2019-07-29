@@ -9,6 +9,30 @@ $path = (isset($metadata->_source->SYSTEM->ALERTPATH) ? $metadata->_source->SYST
 $filename = (isset($metadata->_source->OBJECTINFO->NAME) ? $metadata->_source->OBJECTINFO->NAME : 'Not set');
 # Mappings are inconsistent - sometimes images use ATTRIBUTES->METADATA->PAPER and sometimes ATTRIBUTES->METADATA->GENERAL
 $source = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->CUSTOM_SOURCE) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->CUSTOM_SOURCE : 'Not set');
+
+# Need to deal with case where there are multiple publicatons.
+
+$newspapers = (isset($metadata->_source->ATTRIBUTES->METADATA->PUBDATA->PAPER->NEWSPAPERS) ? $metadata->_source->ATTRIBUTES->METADATA->PUBDATA->PAPER->NEWSPAPERS: "No publication data.");
+$pub_string = "";
+
+if (is_array($newspapers)){
+    $pub_array = [];
+    # First deal with the object by converting it to an array.
+    foreach ($newspapers as $newspaper){
+        array_push($pub_array, $newspaper->NEWSPAPER);
+    }
+    # Remove duplicates
+    $pub_array = array_unique($pub_array);
+    # Build up pub_string
+    foreach ($pub_array as $pub){
+        $pub_string .= ", ";
+        $pub_string .= $pub;
+        $pub_string = ltrim($pub_string, ", ");
+    }
+} else {
+    $pub_string = $newspapers->NEWSPAPER;
+}
+
 $keywords = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCKEYWORD) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCKEYWORD : 'Not set');
 $author = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCAUTHOR) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCAUTHOR : 'Not set');
 $date = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->DATE_CREATED) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->DATE_CREATED : '');
@@ -34,7 +58,7 @@ $custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM
 @endslot
 @endcomponent
 @section('content')
-<p><a href="javascript:history.back()">Back to search</a> | <a href="/metadump/{{$loid}}">Raw ElasticSearch data</a></p>
+<p><a href="javascript:history.back()">Back to results</a> | <a href="/metadump/{{$loid}}">Raw ElasticSearch data</a></p>
 <div class="preview-background">
     <div class="preview-container">
         <img src="http://152.111.25.125:4700/{{$path}}" alt="" class="image-big-preview">
@@ -44,6 +68,7 @@ $custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM
             <div class="image-description-text"><span class="item-label">Index: </span>{{$index}}</div>
             <div class="image-description-text"><span class="item-label">LOID: </span>{{$loid}}</div>
             <div class="image-description-text"><span class="item-label">Source: </span>{{$source}}</div>
+            <div class="image-description-text"><span class="item-label">Publication: </span>{{$pub_string}}</div>
             <div class="image-description-text"><span class="item-label">Author: </span>{{$author}}</div>
             @if ($type)
             <div class="image-description-text"><span class="item-label">Type: </span>{{$type}}</div>

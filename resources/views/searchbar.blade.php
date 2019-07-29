@@ -6,22 +6,35 @@ sort($status);
 
 $indices = Session::get('indices');
 $searched_terms = Session::get('terms');
+$selected_pub = Session::get('selected_pub');
+$publications = Config::get('settings.publications');
 ?>
 
 <nav class="search-bar">
     <form action="/do_advanced_search" method="GET">
         <div class="row">
-            <div class="col-sm-7">
+            <div class="col-sm-6">
                 <input style="height:36px; font-size:14pt" type="text" name="text" id="text" class="form-control" autocomplete="off" autofocus value="{{$terms}}"><br>
             </div>
-            <div class="col-sm-4">
+            <div class="col-sm-2">
+                <select name="publication" id="publication" class="form-control">
+                    @foreach ($publications as $pub)
+                    <option value="{{$pub->name}}"
+                    @if ($selected_pub == $pub->name)
+                        selected                        
+                    @endif
+                    >{{$pub->nicename}}</option>                        
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-sm-3">
                 <select name="archive" id="archive" class="form-control">
                     @foreach ($indices as $index)
-                        <option value="{{$index->index}}"
-                        @if ($selected_archive == $index->index)
+                        <option value="{{$index}}"
+                        @if ($selected_archive == $index)
                             selected
                         @endif
-                        >{{$index->index}}</option>
+                        >{{$index}}</option>
                     @endforeach
                 </select>
             </div>
@@ -29,7 +42,6 @@ $searched_terms = Session::get('terms');
                 <button type="submit" class="btn btn-primary">Search</button>
             </div>
             <input type="hidden" name="type" id="type" value="{{$searched_terms["type"]}}">
-            <input type="hidden" name="publication" id="publication" value="{{$searched_terms["publication"]}}">
             <input type="hidden" name="sort-by" id="sort-by" value="{{$searched_terms["sort-by"]}}">
             <input type="hidden" name="startdate" id="startdate" value="{{$searched_terms["startdate"]}}">
             <input type="hidden" name="enddate" id="enddate" value="{{$searched_terms["enddate"]}}">

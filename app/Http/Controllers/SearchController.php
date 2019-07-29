@@ -41,11 +41,22 @@ class SearchController extends Controller
                 $image['loid'] = $hit['_source']['REF'];
                 $image['archive'] = $hit['_source']['ARCHIVE'];
                 $image['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])){
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
+                    $image['publication'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
+                } else {
+                    $image['publicaton'] = "No publication info.";
+                }
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
                     $image['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
                 } else {
                     $image['source'] = "No source info.";
                 }
+
+                // if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])){
+                //     $image['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
+                // } else {
+                //     $image['source'] = "No source info.";
+                // }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
                     $image['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
                 } else {
@@ -271,20 +282,15 @@ class SearchController extends Controller
         $status = json_decode($status_json);
         sort($status);
         $indices = count($status);
-        for ($i=0; $i < $indices; $i++) { 
-            if($status[$i]->index == ".kibana" || 
-            $status[$i]->index == "configuration@methprod_eomjse1_prod" ||
-            $status[$i]->index == "default@methprod_eomjse1_prod" ||
-            $status[$i]->index == "users@methprod_eomjse1_prod" ||
-            $status[$i]->index == "testelastic@methcarch_eomjse11_arch" ||
-            $status[$i]->index == "pub_09@methcarch_eomjse11_arch" ||
-            $status[$i]->index == "tasks@methprod_eomjse1_prod"            
-            ){
-                unset($status[$i]);
+        $indices_array = [];
+        foreach ($status as $item){
+            if ($item->index == "notpublished@methcarch_eomjse11_arch" || $item->index == "published@methcarch_eomjse11_arch" || $item->index == "aspseek@methcarch_eomjse11_arch"){
+                array_push($indices_array, $item->index);
             }
         }
-        Session::put('indices', $status);
-        return $status;
+        
+        Session::put('indices', $indices_array);
+        return $indices_array;
     }
 
     public function advanced_search_form(){
@@ -328,8 +334,54 @@ class SearchController extends Controller
         $relevance = $terms['relevance'];
 
         $relevance_string = '"min_score": ' . $relevance . ',';
+        $termstext = $terms['text'];
+        $resultsamount = $terms['results-amount'];
+        // $query_json = '{' . $relevance_string . 
+        //     '"query": 
+        //         { "bool": 
+        //             { "must": [ 
+        //                 { "query_string": 
+        //                     {"query": "'. $terms['text'] .'"} 
+        //                 }
+        //             ],
+        //         }
+        //     }
+        // },
+        // "size": "' . $terms['results-amount'] . '",' . $sort_string . '}';
+        $filter_string = "";
+        $selected_pub = $terms['publication'];
+        if ($selected_pub != "all"){
+            $filter_string = <<<EOD
+,
+"filter": {
+    "term": {
+        "ATTRIBUTES.METADATA.PUBDATA.PAPER.NEWSPAPERS.NEWSPAPER": "$selected_pub"
+    }
+}
+EOD;
+        }
 
-        $query_json = '{' . $relevance_string . '"query": { "query_string": {"query": "'. $terms['text'] .'"} },"size": "' . $terms['results-amount'] . '",' . $sort_string . '}';
+# Using heredoc syntax stops me from pulling my hair out.
+        
+$query_json = <<<EOD
+{
+    "query": 
+        {
+            "bool": {
+                "must": [
+                    {
+                        "query_string": {
+                            "query": "$termstext"
+                        }
+                    }
+                ]$filter_string
+            }
+        },
+    "size": "$resultsamount",
+    $sort_string
+}
+EOD;
+
         $params = [
             'index' => $terms['index'],
             'body' => $query_json
@@ -338,6 +390,7 @@ class SearchController extends Controller
 
         Session::put('query_string', $params);
         Session::put('terms', $terms);
+        Session::put('selected_pub', $selected_pub);
         # Place the search results into the session.
         Session::put('results', $results);
 

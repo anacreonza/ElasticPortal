@@ -1,7 +1,8 @@
 <?php
+    $publications = Config::get('settings.publications');
     $terms = Session::get('terms');
-    $publications = array('All', '');
     $indices = Session::get('indices');
+    $selected_pub = Session::get('selected_pub');
 ?>
 @extends('site')
 @section('header')
@@ -26,12 +27,15 @@
                     <label for="archive">Archive:</label>
                     <select name="archive" id="archive" class="form-control">
                         @foreach ($indices as $index)
-                            <option value="{{$index->index}}"
-                                
-                            @if ($index->index == $terms['index'])
+                            <option value="{{$index}}"
+                            @if ($index == $terms['index'])
                                 selected
+                            @else
+                                @if ($index == "published@methcarch_eomjse11_arch")
+                                selected
+                                @endif                                
                             @endif
-                            >{{$index->index}}</option>   
+                            >{{$index}}</option>   
                         @endforeach
                     </select>
                 </div>
@@ -40,7 +44,7 @@
                 <div class="form-group">
                     <label for="type">Type: *</label>
                     <select name="type" id="type" class="form-control">
-                        <option value="all">All</option>
+                        <option value="all" selected>All</option>
                         <option value="story">Story</option>
                         <option value="image">Image</option>
                         <option value="pdf">PDF</option>
@@ -52,17 +56,15 @@
         <div class="row">
             <div class="col-sm-6">
                 <div class="form-group">
-                    <label for="publication">Publication: *</label>
+                    <label for="publication">Publication:</label>
                     <select name="publication" id="publication" class="form-control">
-                        <option value="all">All</option>
-                        <option value="beeld">Beeld</option>
-                        <option value="citypress">City Press</option>
-                        <option value="community">Community Papers</option>
-                        <option value="dailysun">Daily Sun</option>
-                        <option value="dieburger">Die Burger</option>
-                        <option value="getty">Getty Images</option>
-                        <option value="rapport">Rapport</option>
-                        <option value="witness">Witness</option>
+                        @foreach ($publications as $publication)
+                        <option value={{$publication->name}}
+                        @if ($publication->name == $selected_pub)
+                            selected
+                        @endif    
+                        >{{$publication->nicename}}</option>                            
+                        @endforeach
                     </select>
                 </div>   
             </div>
@@ -143,7 +145,7 @@
         <p>* Not implemented yet</p>
         <a href="/status">Indices Status</a><br>
         <a href="/stats">Stats</a><br>
-        <p>Updated 22-Jul-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+        <p>Updated 29-Jul-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
     </div>
     <script type="text/javascript">
         $('.date').datepicker({  
