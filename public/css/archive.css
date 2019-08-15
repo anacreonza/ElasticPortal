@@ -43,6 +43,7 @@ html body {
 .search-background {
     background-color: white;
     padding: 50px;
+    border-radius: 5px;
 }
 
 .pagi-container {
@@ -165,4 +166,14 @@ html body {
 .image-item {
     position: relative;
     border-bottom: 1px black;
+}
+.stats-table {
+    font-size: 9pt;
+}
+.stats-div {
+    background-color: white;
+    padding: 8pt;
+    margin: 8pt;
+    border-radius: 5pt;
+    height: auto;
 }

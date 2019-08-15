@@ -53,12 +53,11 @@ Route::get('/test', function(){
 Route::get('/status', function(){
     return view('status');
 });
-Route::get('/stats', function(){
-    return view('stats');
-});
+Route::get('/stats', 'SearchController@get_stats');
+
 Route::get('/current_query', function(){
     $query_string = Session::get('query_string');
-    return dd($query_string);
+    return view('current_query')->with('query_string', $query_string);
 });
 
 Route::get('/imageviewer/{loid}', 'SearchController@show_imageviewer');

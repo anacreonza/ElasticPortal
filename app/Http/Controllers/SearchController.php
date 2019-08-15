@@ -11,7 +11,7 @@ use Elasticsearch\ClientBuilder;
 
 class SearchController extends Controller
 {
-    protected $elastisearch;
+    protected $elasticsearch;
     
     public function __construct() {
         # Build URL for Elastic server from config
@@ -21,6 +21,7 @@ class SearchController extends Controller
             $server_address . ":" . $server_port
         ];
         $this->elasticsearch = ClientBuilder::create()->setHosts($hosts)->build();
+        # Need to use this $elasticsearch object's methods like get().
     }
     
     public function prepare_results(){
@@ -87,6 +88,11 @@ class SearchController extends Controller
                 } else {
                     $story['content'] = "No content info.";
                 }
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])){
+                    $story['author'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
+                } else {
+                    $story['author'] = "No author info.";
+                }
                 $truncate_length = 500;
                 if (strlen($story['content'] < $truncate_length )){
                     $story_preview = substr($story['content'], 0, $truncate_length) . "...";
@@ -128,6 +134,9 @@ class SearchController extends Controller
                     $story['date'] = $date->toDateString();
                 } else {
                     $story['date'] = "No date info.";
+                }
+                if (isset($hit['highlight'])){
+                    $story['highlight'] = $hit['highlight'];
                 }
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
                     $story['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
@@ -234,23 +243,7 @@ class SearchController extends Controller
                         }
                     }
                     $html['bodypreview'] = \html_entity_decode($body_preview);
-                    /*
-                    $body = substr($html['text'], $body_start, $body_length);
-                    $body = str_replace('<head>', '', $body);
-                    $body = str_replace('</head>', '', $body);
-                    $body = str_replace('<title>', '', $body);
-                    $body = str_replace('</title>', '', $body);
-                    $body = str_replace('<p>', '', $body);
-                    $body = str_replace('</p>', '', $body);
-                    $body = str_replace('<h1>', '', $body);
-                    $body = str_replace('</h1>', '', $body);
-                    $body = str_replace('<body>', '', $body);
-                    $body = str_replace('</body>', '', $body);
-                    $body = str_replace('<html>', '', $body);
-                    $body = str_replace('</html>', '', $body);
 
-                    $html['body'] = $body . "...";
-                    */
                 }
 
                 if ($html){
@@ -295,9 +288,114 @@ class SearchController extends Controller
 
     public function advanced_search_form(){
         
-        $output = SearchController::get_indices();
-        return view('advanced_search')->with('output', $output);
+        $data['indices'] = $this->get_indices();
+        $data['publications'] = $this->get_publications();
+        $data['types'] =  $this->get_types();
+        Session::put('publications', $data['publications']);
+        return view('advanced_search')->with('data', $data);
 
+    }
+
+    public function get_types(){
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'document_types' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
+                            'size' => 12
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        $doctypes = $this->elasticsearch->search($params);
+        $types = $doctypes['aggregations']['document_types']['buckets'];
+        $doctype_list[] = 'All';
+        foreach ($types as $type){
+            $typename = $type['key'];
+            $typename = trim($typename);
+            $typename = \strtolower($typename);
+            if (!\in_array($typename, $doctype_list)){
+                $doctype_list[] = $typename;
+            }
+        }
+        return $doctype_list;
+    }
+
+    public function get_publications(){
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'publications' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword',
+                            'size' => 60
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        $pubs = $this->elasticsearch->search($params);
+        $publications = $pubs['aggregations']['publications']['buckets'];
+        $pub_list[] = 'All';
+        foreach ($publications as $publication){
+            $pub_list[] = $publication['key'];
+        }
+        return $pub_list;
+    }
+
+    public function get_stats(){
+        $params = [
+            // 'index' => '/',
+            'body' => [
+                'aggs' => [
+                    'Publications' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword',
+                            'size' => 60
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        $publication_counts = $this->elasticsearch->search($params);
+
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'document_types' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
+                            'size' => 12
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $doc_types = $this->elasticsearch->search($params);
+
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'categories' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.CATEGORY',
+                            'size' => 20
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $categories = $this->elasticsearch->search($params);
+
+        $data['publication_counts'] = $publication_counts;
+        $data['doc_types'] = $doc_types;
+        $data['categories'] = $categories;
+
+        return view('stats')->with('data', $data);
     }
 
     public function do_advanced_search(){
@@ -312,18 +410,22 @@ class SearchController extends Controller
         $terms['results-amount'] = $_GET['results-amount'];
         $terms['show-amount'] = $_GET['show-amount'];
         $terms['relevance'] = $_GET['relevance'];
+        $terms['author'] = $_GET['author'];
 
         $sort_by = $terms['sort-by'];
 
         switch ($sort_by) {
             case 'date':
-                $sort_string = '"sort": [{"OBJECTINFO.CREATED": "desc"}]';
+                $sort_string = 'OBJECTINFO.CREATED';
+                $sort_order = 'desc';
                 break;
             case 'score':
-                $sort_string = '"sort": [{"_score": "desc"}]';
+                $sort_string = '_score';
+                $sort_order = 'desc';
                 break;
             case 'size':
-                $sort_string = '"sort": [{"OBJECTINFO.SIZE": "desc"}]';
+                $sort_string = 'OBJECTINFO.SIZE';
+                $sort_order = 'desc';
                 break;
             
             default:
@@ -336,61 +438,71 @@ class SearchController extends Controller
         $relevance_string = '"min_score": ' . $relevance . ',';
         $termstext = $terms['text'];
         $resultsamount = $terms['results-amount'];
-        // $query_json = '{' . $relevance_string . 
-        //     '"query": 
-        //         { "bool": 
-        //             { "must": [ 
-        //                 { "query_string": 
-        //                     {"query": "'. $terms['text'] .'"} 
-        //                 }
-        //             ],
-        //         }
-        //     }
-        // },
-        // "size": "' . $terms['results-amount'] . '",' . $sort_string . '}';
-        $filter_string = "";
+
         $selected_pub = $terms['publication'];
-        if ($selected_pub != "all"){
-            $filter_string = <<<EOD
-,
-"filter": {
-    "term": {
-        "ATTRIBUTES.METADATA.PUBDATA.PAPER.NEWSPAPERS.NEWSPAPER": "$selected_pub"
-    }
-}
-EOD;
+        $selected_type = $terms['type'];
+        $filters = [];
+
+        if ($selected_type != 'All'){
+            $type_filter = [
+                'term' => [
+                    'ATTRIBUTES.METADATA.GENERAL.DOCTYPE' => $selected_type
+                ]
+            ];
+            $filters[] = $type_filter;
         }
 
-# Using heredoc syntax stops me from pulling my hair out.
-        
-$query_json = <<<EOD
-{
-    "query": 
-        {
-            "bool": {
-                "must": [
-                    {
-                        "query_string": {
-                            "query": "$termstext"
-                        }
-                    }
-                ]$filter_string
-            }
-        },
-    "size": "$resultsamount",
-    $sort_string
-}
-EOD;
+        if ($selected_pub != 'All'){
+            $pub_filter = [
+                'term' => [
+                    'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword' => $selected_pub
+                ]
+            ];
+            $filters[] = $pub_filter;
+        }
 
+        # Build up query
+        
         $params = [
             'index' => $terms['index'],
-            'body' => $query_json
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            'query_string' => [
+                                'query' => $terms['text']
+                            ]
+                        ],
+                        'filter' => $filters
+                    ]
+                ],
+                'size' => $resultsamount,
+                'sort' => [
+                    $sort_string => $sort_order
+                ],
+                'highlight' => [
+                    'pre_tags' => "<span class='highlighted-text'>",
+                    'post_tags' => "</span>",
+                    'fields' => [
+                        'CONTENT.XMLFLAT' => new \stdClass() # Needs empty object - won't accept empty array.
+                    ],
+                    'fragment_size' => 200
+                ]
+            ]
         ];
+
         $results = $this->elasticsearch->search($params);
 
+        # Put the search parameters into the session:
         Session::put('query_string', $params);
         Session::put('terms', $terms);
+        Session::put('selected_type', $terms['type']);
         Session::put('selected_pub', $selected_pub);
+        Session::put('sorting', $terms['sort-by']);
+        Session::put('maxresults', $terms['results-amount']);
+        Session::put('maxperpage', $terms['show-amount']);
+        Session::put('author', $terms['author']);
+
         # Place the search results into the session.
         Session::put('results', $results);
 
@@ -407,6 +519,8 @@ EOD;
             return redirect('/results/pdfs/1');
         } elseif ($output['counts']['html'] > 0) {
             return redirect('/results/html/1');
+        } else {
+            return view('results.error')->with('data', $params);
         }
     }
 

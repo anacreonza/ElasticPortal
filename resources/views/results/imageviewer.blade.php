@@ -30,7 +30,11 @@ if (is_array($newspapers)){
         $pub_string = ltrim($pub_string, ", ");
     }
 } else {
-    $pub_string = $newspapers->NEWSPAPER;
+    if (isset($newspapers->NEWSPAPER)){
+        $pub_string = $newspapers->NEWSPAPER;
+    } else {
+        $pub_string = "Publication metadata not set";
+    }
 }
 
 $keywords = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCKEYWORD) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->DOCKEYWORD : 'Not set');

@@ -1,13 +1,22 @@
 <?php
+
+use App\Http\Controllers;
+
 $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
 $status_json = file_get_contents($status_json_url);
 $status = json_decode($status_json);
 sort($status);
 
-$indices = Session::get('indices');
+if (Session::get('indices')){
+    $indices = Session::get('indices');
+} else {
+    SearchController::get_indices();
+    $indices = Session::get('indices');
+
+}
 $searched_terms = Session::get('terms');
 $selected_pub = Session::get('selected_pub');
-$publications = Config::get('settings.publications');
+$publications = Session::get('publications');
 ?>
 
 <nav class="search-bar">
@@ -19,11 +28,11 @@ $publications = Config::get('settings.publications');
             <div class="col-sm-2">
                 <select name="publication" id="publication" class="form-control">
                     @foreach ($publications as $pub)
-                    <option value="{{$pub->name}}"
-                    @if ($selected_pub == $pub->name)
+                    <option value="{{$pub}}"
+                    @if ($selected_pub == $pub)
                         selected                        
                     @endif
-                    >{{$pub->nicename}}</option>                        
+                    >{{$pub}}</option>                        
                     @endforeach
                 </select>
             </div>
@@ -48,6 +57,7 @@ $publications = Config::get('settings.publications');
             <input type="hidden" name="results-amount" id="results-amount" value="{{$searched_terms["results-amount"]}}">
             <input type="hidden" name="show-amount" id="show-amount" value="{{$searched_terms["show-amount"]}}">
             <input type="hidden" name="relevance" id="relevance" value="{{$searched_terms["relevance"]}}">
+            <input type="hidden" name="author" id="author" value="{{$searched_terms["author"]}}">
         </div>
     </form>
 </nav>
