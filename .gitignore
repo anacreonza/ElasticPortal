@@ -3,6 +3,7 @@
 /public/storage
 /storage/*.key
 /vendor
+/config/elastic.php
 .env
 .phpunit.result.cache
 Homestead.json

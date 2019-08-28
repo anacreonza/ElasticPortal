@@ -62,4 +62,6 @@ Route::get('/current_query', function(){
 
 Route::get('/imageviewer/{loid}', 'SearchController@show_imageviewer');
 
+Route::get('/storyviewer/{loid}', 'SearchController@show_storyviewer');
+
 Route::get('/metadump/{loid}', 'SearchController@meta_dump');

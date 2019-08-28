@@ -56,8 +56,10 @@ $publications = Session::get('publications');
             <input type="hidden" name="enddate" id="enddate" value="{{$searched_terms["enddate"]}}">
             <input type="hidden" name="results-amount" id="results-amount" value="{{$searched_terms["results-amount"]}}">
             <input type="hidden" name="show-amount" id="show-amount" value="{{$searched_terms["show-amount"]}}">
-            <input type="hidden" name="relevance" id="relevance" value="{{$searched_terms["relevance"]}}">
+            <input type="hidden" name="category" id="category" value="">
+            {{-- <input type="hidden" name="relevance" id="relevance" value="{{$searched_terms["relevance"]}}"> --}}
             <input type="hidden" name="author" id="author" value="{{$searched_terms["author"]}}">
+            <input type="hidden" name="match" id="match" value="{{$searched_terms["match"]}}">
         </div>
     </form>
 </nav>

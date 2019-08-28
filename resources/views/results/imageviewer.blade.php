@@ -47,8 +47,21 @@ $copyright = (isset($metadata->_source->ATTRIBUTES->METADATA->INFOIMAGE->COPYRIG
 $pixel_width = (isset($metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->WIDTH) ? $metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->WIDTH : '');
 $pixel_height = (isset($metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->HEIGHT) ? $metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->HEIGHT : '');
 $colour_space = (isset($metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->COLORTYPE) ? $metadata->_source->SYSATTRIBUTES->PROPS->IMAGEINFO->COLORTYPE : '');
-$pub_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->PUB_CAPTION) ? $metadata->_source->ATTRIBUTES->METADATA->PAPER->PUB_CAPTION : '');
-$custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM_CAPTION) ? $metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM_CAPTION : '');
+$pub_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->PUB_CAPTION) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->PUB_CAPTION : '');
+$custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->GENERAL->CUSTOM_CAPTION) ? $metadata->_source->ATTRIBUTES->METADATA->GENERAL->CUSTOM_CAPTION : '');
+
+if ($pub_caption == $custom_caption){
+    $caption = $pub_caption;
+} else {
+    $pub_caption_length = strlen($pub_caption);
+    $custom_caption_length = strlen($custom_caption);
+    if ($pub_caption_length > $custom_caption){
+        $caption = $pub_caption;
+    } else {
+        $caption = $custom_caption;
+    }
+}
+
 ?>
 @section('header')
     <title>Image Viewer</title>
@@ -71,6 +84,9 @@ $custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM
             <div class="image-description-text"><span class="item-label">Filename: </span>{{$filename}}</div>
             <div class="image-description-text"><span class="item-label">Index: </span>{{$index}}</div>
             <div class="image-description-text"><span class="item-label">LOID: </span>{{$loid}}</div>
+            @if ($caption)
+            <div class="image-description-text"><span class="item-label">Caption: </span>{{$caption}}</div>
+            @endif
             <div class="image-description-text"><span class="item-label">Source: </span>{{$source}}</div>
             <div class="image-description-text"><span class="item-label">Publication: </span>{{$pub_string}}</div>
             <div class="image-description-text"><span class="item-label">Author: </span>{{$author}}</div>
@@ -90,12 +106,6 @@ $custom_caption = (isset($metadata->_source->ATTRIBUTES->METADATA->PAPER->CUSTOM
             @endif
             @if ($date)
             <div class="image-description-text"><span class="item-label">Date Created: </span>{{$date}}</div>
-            @endif
-            @if ($pub_caption)
-            <div class="image-description-text"><span class="item-label">Pub Caption: </span>{{$pub_caption}}</div>
-            @endif
-            @if ($custom_caption)
-            <div class="image-description-text"><span class="item-label">Custom Caption: </span>{{$custom_caption}}</div>
             @endif
 <br>
 <a href="http://152.111.25.125:4700{{$path}}">Download <span class="glyphicon glyphicon-download"></span></a>

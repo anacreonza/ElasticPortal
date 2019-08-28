@@ -93,26 +93,7 @@ class SearchController extends Controller
                 } else {
                     $story['author'] = "No author info.";
                 }
-                $truncate_length = 500;
-                if (strlen($story['content'] < $truncate_length )){
-                    $story_preview = substr($story['content'], 0, $truncate_length) . "...";
-                    $story_preview_array = \preg_split("/[\s,]+/", $story_preview);
-
-                    #$body_preview = strip_tags($body_preview);
-                    $terms = Session::get('terms');
-                    $text = $terms['text'];
-
-                    $text_terms_array = \preg_split("/[\s,]+/", $text);
-
-                    foreach ($text_terms_array as $text_item){
-                        foreach ($story_preview_array as $item){
-                            if (\strcasecmp($item, $text_item) == 0){
-                                $story_preview = \str_ireplace($item , '<span class="highlighted-text">' . $item . '</span>', $story_preview);
-                            }
-                        }
-                    }
-                    $story['content'] = $story_preview;
-                }
+ 
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
                     $story['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
                 } else {
@@ -137,6 +118,8 @@ class SearchController extends Controller
                 }
                 if (isset($hit['highlight'])){
                     $story['highlight'] = $hit['highlight'];
+                } else {
+                    $story['highlight'] = "No highlights found.";
                 }
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
                     $story['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
@@ -213,18 +196,6 @@ class SearchController extends Controller
                     #$body_preview = \str_replace('<iframe height="12%" width="98%" src="/disclaimer.html"></iframe>', "", $body_preview);
                     $body_preview = \str_replace("<br>\n<br>", "", $body_preview);
                     $body_preview = \strip_tags($body_preview, '<br>');
-                    // $body_preview = \str_replace('<h1>', "", $body_preview);
-                    // $body_preview = \str_replace('</h1>', "", $body_preview);
-                    // $body_preview = \str_replace('<h2>', "", $body_preview);
-                    // $body_preview = \str_replace('</h2>', "", $body_preview);
-                    // $body_preview = \str_replace('<headline>', "", $body_preview);
-                    // $body_preview = \str_replace('</headline>', "", $body_preview);
-                    // $body_preview = \str_replace('<subhead>', "", $body_preview);
-                    // $body_preview = \str_replace('</subhead>', "", $body_preview);
-                    // $body_preview = \str_replace('<body>', "", $body_preview);
-                    // $body_preview = \str_replace('</body>', "", $body_preview);
-                    // #$body_preview = \str_replace('<br>', "", $body_preview);
-
                     
                     $preview_length = 700;
                     $body_preview = \substr($body_preview, 0, $preview_length);
@@ -270,6 +241,10 @@ class SearchController extends Controller
     }
 
     public function get_indices(){
+        $indices_array = Session::get('indices');
+        if ($indices_array){
+            return $indices_array;
+        }
         $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
         $status_json = file_get_contents($status_json_url);
         $status = json_decode($status_json);
@@ -291,12 +266,16 @@ class SearchController extends Controller
         $data['indices'] = $this->get_indices();
         $data['publications'] = $this->get_publications();
         $data['types'] =  $this->get_types();
-        Session::put('publications', $data['publications']);
+        $data['categories'] = $this->get_categories();
         return view('advanced_search')->with('data', $data);
 
     }
 
     public function get_types(){
+        $doctype_list = Session::get('types');
+        if ($doctype_list){
+            return $doctype_list;
+        }
         $params = [
             'body' => [
                 'aggs' => [
@@ -320,10 +299,15 @@ class SearchController extends Controller
                 $doctype_list[] = $typename;
             }
         }
+        Session::put('types', $doctype_list);
         return $doctype_list;
     }
 
     public function get_publications(){
+        $pub_list = Session::get('publications');
+        if ($pub_list){
+            return $pub_list;
+        }
         $params = [
             'body' => [
                 'aggs' => [
@@ -342,7 +326,62 @@ class SearchController extends Controller
         foreach ($publications as $publication){
             $pub_list[] = $publication['key'];
         }
+        Session::put('publications', $pub_list);
         return $pub_list;
+    }
+
+    public function get_categories(){
+        $cat_list = Session::get('categories');
+        if ($cat_list){
+            return $cat_list;
+        }
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'categories' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.CATEGORY',
+                            'size' => 20
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $cats = $this->elasticsearch->search($params);
+        $categories = $cats['aggregations']['categories']['buckets'];
+
+        $total_doc_count = 0;
+        foreach ($categories as $category){
+            $cat = [];
+            $cat['name'] = $category['key'];
+            $cat['count'] = $category['doc_count'];
+            $cat_list[] = $cat;
+            $total_doc_count += $category['doc_count'];
+        }
+        $all = ['name' => 'All', 'count' => $total_doc_count];
+        $cat_list[] = $all;
+        $cat_list = array_sort($cat_list);
+        Session::put('categories', $cat_list);
+        return $cat_list;
+    }
+
+    function get_doctypes(){
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'document_types' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
+                            'size' => 12
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $doc_types = $this->elasticsearch->search($params);
+        return $doc_types;
     }
 
     public function get_stats(){
@@ -361,35 +400,9 @@ class SearchController extends Controller
         ];
         $publication_counts = $this->elasticsearch->search($params);
 
-        $params = [
-            'body' => [
-                'aggs' => [
-                    'document_types' => [
-                        'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
-                            'size' => 12
-                        ]
-                    ]
-                ]
-            ]
-        ];
 
-        $doc_types = $this->elasticsearch->search($params);
-
-        $params = [
-            'body' => [
-                'aggs' => [
-                    'categories' => [
-                        'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.CATEGORY',
-                            'size' => 20
-                        ]
-                    ]
-                ]
-            ]
-        ];
-
-        $categories = $this->elasticsearch->search($params);
+        $categories = $this->get_categories();
+        $doc_types = $this->get_doctypes();
 
         $data['publication_counts'] = $publication_counts;
         $data['doc_types'] = $doc_types;
@@ -409,12 +422,13 @@ class SearchController extends Controller
         $terms['enddate'] = $_GET['enddate'];
         $terms['results-amount'] = $_GET['results-amount'];
         $terms['show-amount'] = $_GET['show-amount'];
-        $terms['relevance'] = $_GET['relevance'];
         $terms['author'] = $_GET['author'];
+        $terms['match'] = $_GET['match'];
+        $terms['categories'] = $_GET['category'];
+        $date_range['start'] = $terms['startdate'];
+        $date_range['end'] = $terms['enddate'];
 
-        $sort_by = $terms['sort-by'];
-
-        switch ($sort_by) {
+        switch ($terms['sort-by']) {
             case 'date':
                 $sort_string = 'OBJECTINFO.CREATED';
                 $sort_order = 'desc';
@@ -433,15 +447,23 @@ class SearchController extends Controller
                 break;
         }
         
-        $relevance = $terms['relevance'];
+        #$relevance = $terms['relevance'];
 
-        $relevance_string = '"min_score": ' . $relevance . ',';
+        #$relevance_string = '"min_score": ' . $relevance . ',';
         $termstext = $terms['text'];
         $resultsamount = $terms['results-amount'];
 
         $selected_pub = $terms['publication'];
         $selected_type = $terms['type'];
         $filters = [];
+
+        $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
+        $termcount = count($text_terms_array);
+        $all_terms_string = "";
+        foreach ($text_terms_array as $term) {
+            $all_terms_string .= " AND " . $term;
+        }
+        $all_terms_string = \substr($all_terms_string, 5);
 
         if ($selected_type != 'All'){
             $type_filter = [
@@ -461,6 +483,56 @@ class SearchController extends Controller
             $filters[] = $pub_filter;
         }
 
+        if (isset($date_range['start']) || isset($date_range['end'])){
+            if ($date_range['start'] == ''){
+                $date_range['start'] = '1970-01-01';
+            }
+            if ($date_range['end'] == ''){
+                $date_range['end'] = 'now';
+            }
+            $date_range_filter = [
+                'range' => [
+                    'SYSATTRIBUTES.PROPS.PRODUCTINFO.ISSUEDATE' => [
+                        'gte' => $date_range['start'],
+                        'lte' => $date_range['end']
+                    ]
+                ]
+            ];
+            $filters[] = $date_range_filter;
+        }
+
+        if ($terms['match'] == 'phrase'){
+            $textquery = [
+                'multi_match' => [ 
+                    "query" => $terms['text'],
+                    "type" => "phrase",
+                    "fields" => [
+                        'CONTENT.XMLFLAT',
+                        'CONTENT.TEXT',
+                        'ATTRIBUTES.METADATA.GENERAL.DOCKEYWORD',
+                        'ATTRIBUTES.METADATA.GENERAL.DOCTITLE',
+                        'ATTRIBUTES.METADATA.GENERAL.CUSTOM_CAPTION',
+                        'SYSATTRIBUTES.PROPS.SUMMARY',
+                        ]
+                    ]
+                ];
+        } elseif($terms['match'] == 'allwords'){
+            $textquery = [
+                'query_string' => [
+                    'query' => $all_terms_string,
+                    'fuzziness' => 0
+                    #'minimum_should_match' => $termcount
+                ]
+            ];
+        } else {
+            $textquery = [
+                'query_string' => [
+                    'query' => $terms['text'],
+                    'fuzziness' => 'AUTO'
+                ]
+            ];
+        }
+
         # Build up query
         
         $params = [
@@ -469,9 +541,7 @@ class SearchController extends Controller
                 'query' => [
                     'bool' => [
                         'must' => [
-                            'query_string' => [
-                                'query' => $terms['text']
-                            ]
+                            $textquery
                         ],
                         'filter' => $filters
                     ]
@@ -491,10 +561,15 @@ class SearchController extends Controller
             ]
         ];
 
+        $query_body = $params['body'];
+        $queried_index = $params['index'];
+
         $results = $this->elasticsearch->search($params);
 
         # Put the search parameters into the session:
         Session::put('query_string', $params);
+        Session::put('query_body', $query_body);
+        Session::put('queried_index', $queried_index);
         Session::put('terms', $terms);
         Session::put('selected_type', $terms['type']);
         Session::put('selected_pub', $selected_pub);
@@ -502,6 +577,17 @@ class SearchController extends Controller
         Session::put('maxresults', $terms['results-amount']);
         Session::put('maxperpage', $terms['show-amount']);
         Session::put('author', $terms['author']);
+        Session::put('match', $terms['match']);
+        if ($date_range['start'] != '1970-01-01'){
+            Session::put('selected_startdate', $date_range['start']);
+        } else {
+            Session::put('selected_startdate', '');
+        }
+        if ($date_range['end'] != 'now'){
+            Session::put('selected_enddate', $date_range['end']);
+        } else {
+            Session::put('selected_enddate', '');
+        }
 
         # Place the search results into the session.
         Session::put('results', $results);
@@ -563,6 +649,11 @@ class SearchController extends Controller
     public function show_imageviewer($loid){
         $metadata = SearchController::get_meta_one($loid);
         return view('results.imageviewer')->with('metadata', $metadata);
+    }
+
+    public function show_storyviewer($loid){
+        $story = $this->get_meta_one($loid);
+        return view('results.storyviewer')->with('story', $story);
     }
 
     public function search_all(){

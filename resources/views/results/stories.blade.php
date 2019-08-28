@@ -66,18 +66,19 @@
                             <td class="story-description-text-col2"><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
                             <td class="story-description-text-col2"><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
                         </tr>
-                            {{-- <td class="story-description-text" colspan="4"><span class="item-label">Highlight: </span>{!!$display_array[$i]['highlight']!!}</td> --}}
-                        <tr><td class="story-description-text" colspan="4">
+                        @if (isset($display_array[$i]['highlight']['CONTENT.XMLFLAT']))
+                            <tr><td class="story-description-text" colspan="4">
                             <span class="item-label">Highlights:</span>
-                            @foreach ($display_array[$i]['highlight']['CONTENT.XMLFLAT'] as $highlight)
-                                ...{!!$highlight!!}...
-                            @endforeach
+                                @foreach ($display_array[$i]['highlight']['CONTENT.XMLFLAT'] as $highlight)
+                                    ...{!!$highlight!!}...
+                                @endforeach
+                        @endif
                         </td></tr>
                         <tr>
                             <td class="story-description-text"><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</td>
                             <td class="story-description-text"><span class="item-label">Author: </span>{{$display_array[$i]['author']}}</td>
                             <td class="story-description-text"><span class="item-label">Date Published: </span>{{$display_array[$i]['date']}}</td>
-                            <td class="story-description-text"><a href="http://152.111.25.125:4700{{$display_array[$i]['path']}}">Download <span class="glyphicon glyphicon-download"></span></a></td>
+                            <td class="story-description-text"><a href="/storyviewer/{{$display_array[$i]['loid']}}">View</a></td>
                         </tr>
                     </table>
                 </div>

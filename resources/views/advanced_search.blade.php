@@ -2,6 +2,7 @@
     $terms = Session::get('terms');
     $indices = $data['indices'];
     $publications = $data['publications'];
+    $categories = $data['categories'];
     $types = $data['types'];
     $selected_type = Session::get('type');
     $selected_pub = Session::get('selected_pub');
@@ -10,6 +11,14 @@
     $selected_maxperpage = Session::get('maxperpage');
     $selected_minrelevance = Session::get('minrelevance');
     $selected_author = Session::get('author');
+    $selected_match_option = Session::get('match');
+    if (!isset($selected_match_option)){
+        $selected_match_option = 'any';
+    }
+    $selected_startdate = Session::get('selected_startdate');
+    $selected_enddate = Session::get('selected_enddate');
+    $kibana_url = Config::get('elastic.kibana.ip');
+    $kibana_port = Config::get('elastic.kibana.port');
 ?>
 @extends('site')
 @section('header')
@@ -23,11 +32,14 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="form-group">
-                    <label for="text">Any text:</label>
                     <input style="height:45px" type="text" name="text" id="text" class="form-control" autocomplete="off" autofocus value="{{$terms['text']}}"><br>
+                    <label class="radio-inline"><input type="radio" name="match" value="any" @if ($selected_match_option == 'any')checked @endif>Match Any Text</label>
+                    <label class="radio-inline"><input type="radio" name="match" value="allwords" @if ($selected_match_option == 'allwords')checked @endif>Match Exact Words</label>
+                    <label class="radio-inline"><input type="radio" name="match" value="phrase" @if ($selected_match_option == 'phrase')checked @endif>Match Exact Phrase</label>
                 </div>
             </div>
         </div>
+        <h4>Filters:</h4>
         <div class="row">
             <div class="col-sm-6">
                 <div class="form-group">
@@ -37,10 +49,8 @@
                             <option value="{{$index}}"
                             @if ($index == $terms['index'])
                                 selected
-                            @else
-                                @if ($index == "published@methcarch_eomjse11_arch")
+                            @elseif (!isset($terms['index']) && $index == 'published@metharch_eomjse11_arch')
                                 selected
-                                @endif                                
                             @endif
                             >{{$index}}</option>   
                         @endforeach
@@ -85,24 +95,58 @@
                         <option value="score" selected>Score (show most relevant items first)</option>
                         <option value="size">Size (show biggest items first)</option>
                     </select>
-
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-sm-6">
                 <div class="form-group">
-                    <label for="startdate">From Date: *</label>
-                    <input class="date form-control" type="text" name="startdate" id="startdate" value="">
+                    <label for="category">Category:</label>
+                    <select name="category" id="category" class="form-control">
+                        @foreach ($categories as $category)
+                            <option value={{$category['name']}}>{{$category['name']}}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="col-sm-6">
                 <div class="form-group">
-                    <label for="enddate">To Date: *</label>
-                    <input class="date form-control" type="text" name="enddate" id="enddate" value="">
+                    <label for="author">Author:*</label>
+                    <input type="text" name="author" id="author" class="form-control" autocomplete="off" value=""><br>
                 </div>
             </div>
-        </div>    
+        </div>        
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="startdate">From Date:</label>
+                    <input class="form-control" data-provide="datepicker" type="text" name="startdate" id="startdate" value="{{$selected_startdate}}">
+                </div>
+                {{-- JQuery script for date picker --}}
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                     $('#startdate').datepicker({
+                      "format": "yyyy-mm-dd",
+                      "keyboardNavigation": true
+                     }); 
+                    });
+                    </script>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="enddate">To Date:</label>
+                    <input class="form-control" data-provide="datepicker" type="text" name="enddate" id="enddate" value="{{$selected_enddate}}">
+                {{-- JQuery script for date picker --}}
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                     $('#enddate').datepicker({
+                      "format": "yyyy-mm-dd",
+                      "keyboardNavigation": true
+                     }); 
+                    });
+                    </script>                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-sm-6">
                 <div class="form-group">
@@ -166,24 +210,7 @@
                 </div>
             </div>
         </div>    
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="form-group">
-                    <label for="relevance">Minimum Relevance:</label>
-                    <select name="relevance" id="relevance" class="form-control">
-                        <option value="14">High (limit search to most relevant items only)</option>
-                        <option value="12" selected>Medium</option>
-                        <option value="0">Low (show all results)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group">
-                    <label for="author">Author:*</label>
-                    <input type="text" name="author" id="author" class="form-control" autocomplete="off" value=""><br>
-                </div>
-            </div>
-        </div>    
+
         <div class="search-button">
             <button type="submit" class="btn btn-primary">Search</button>
         </div>
@@ -192,12 +219,18 @@
 </div>
     <div class="container">
         <br>
-        <p><b>Note: </b>This site is currently experimental. Entire query builder was rewritten recently. Sorting on other than score results in crashes.</p>
+        <p><b>Note: </b>This site is currently experimental.</p>
+        <p>Recent changes:</p>
+        <ul>
+            <li>The results of the bucket aggregation query to populate the dropdown lists are now stored in the browser session to increase the loading speed of the search form.</li>
+            <li>Added the ability to match exact words. Terms are concatenated with "AND" and fuzziness is set at 0</li>
+            <li>Got date range filter working. There is no validation for invalid dates yet though.</li>
+        </ul>
         <p>* Not implemented yet</p>
         <a href="/status">Indices Status</a><br>
-        <a href="http://152.111.20.157:5601/">Kibana</a><br>
+        <a href="http://{{$kibana_url}}:{{$kibana_port}}">Kibana</a><br>
         <a href="/stats">Stats</a><br>
-        <p>Updated 15-Aug-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+        <p>Updated 28-Aug-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
     </div>
     <script type="text/javascript">
         $('.date').datepicker({  

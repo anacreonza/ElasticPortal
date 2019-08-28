@@ -76,12 +76,18 @@ html body {
 }
 .story-background {
     background-color: white;
-    padding: 5px;
+    padding: 20px;
     width: 100%;
 }
 .story-container {
     padding: 10px;
     margin: 5px;
+}
+.story-description {
+    display: inline;
+    flex-wrap: wrap;
+    padding: 5px;
+    margin: 5px;  
 }
 .story-description-text {
     font-size: 11pt;
@@ -176,4 +182,8 @@ html body {
     margin: 8pt;
     border-radius: 5pt;
     height: auto;
+}
+.error-bar {
+    background-color: pink;
+    width: 100%;
 }
