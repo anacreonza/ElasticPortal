@@ -8,6 +8,7 @@ use Session;
 use Illuminate\Support\Facades\Redirect;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
+use DOMDocument;
 
 class SearchController extends Controller
 {
@@ -112,7 +113,7 @@ class SearchController extends Controller
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'])){
                     
                     $date = new Carbon($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION']);
-                    $story['date'] = $date->toDateString();
+                    $story['date'] = date("d-M-Y", strtotime($date));
                 } else {
                     $story['date'] = "No date info.";
                 }
@@ -252,7 +253,7 @@ class SearchController extends Controller
         $indices = count($status);
         $indices_array = [];
         foreach ($status as $item){
-            if ($item->index == "notpublished@methcarch_eomjse11_arch" || $item->index == "published@methcarch_eomjse11_arch" || $item->index == "aspseek@methcarch_eomjse11_arch"){
+            if ($item->index == "notpublished@methcarch_eomjse11_arch" || $item->index == "published@methcarch_eomjse11_arch"){
                 array_push($indices_array, $item->index);
             }
         }
@@ -411,15 +412,41 @@ class SearchController extends Controller
         return view('stats')->with('data', $data);
     }
 
-    public function do_advanced_search(){
+    public function do_advanced_search(Request $request){
+        #$request->flash();
+        // $validated_data = $request->validate([
+        //     'archive' => 'required',
+        //     'type' => 'required',
+        //     'enddate' => 'before:now',
+        //     'startdate' => 'before:enddate'
+        // ]);
         $terms = array();
         $terms['index'] = $_GET['archive'];
         $terms['type'] = $_GET['type'];
         $terms['text'] = $_GET['text'];
+        $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
         $terms['publication'] = $_GET['publication'];
         $terms['sort-by'] = $_GET['sort-by'];
         $terms['startdate'] = $_GET['startdate'];
         $terms['enddate'] = $_GET['enddate'];
+        
+        $request->validate([
+            'text' => 'required'
+        ]);
+
+        if ($terms['enddate'] != ''){
+            $validated_data = $request->validate([
+                'enddate' => 'before:now',
+                'startdate' => 'required'
+            ]);
+        }
+        if ($terms['startdate'] != ''){
+            $validated_data = $request->validate([
+                'startdate' => 'before:enddate',
+                'enddate' => 'required'
+            ]);
+        }
+
         $terms['results-amount'] = $_GET['results-amount'];
         $terms['show-amount'] = $_GET['show-amount'];
         $terms['author'] = $_GET['author'];
@@ -446,7 +473,7 @@ class SearchController extends Controller
                 # code...
                 break;
         }
-        
+
         #$relevance = $terms['relevance'];
 
         #$relevance_string = '"min_score": ' . $relevance . ',';
@@ -483,7 +510,7 @@ class SearchController extends Controller
             $filters[] = $pub_filter;
         }
 
-        if (isset($date_range['start']) || isset($date_range['end'])){
+        if ($date_range['start'] != '' || $date_range['end'] != ''){
             if ($date_range['start'] == ''){
                 $date_range['start'] = '1970-01-01';
             }
@@ -499,6 +526,8 @@ class SearchController extends Controller
                 ]
             ];
             $filters[] = $date_range_filter;
+        } else {
+            $date_range_filter = '';
         }
 
         if ($terms['match'] == 'phrase'){
@@ -597,14 +626,12 @@ class SearchController extends Controller
         Session::put('output', $output);
         Session::put('items_per_page', $terms['show-amount']);
 
-        if ($output['counts']['images'] > 0){
-            return redirect('/results/images/1');
-        } elseif ($output['counts']['stories'] > 0) {
+        if ($output['counts']['stories'] > 0){
             return redirect('/results/stories/1');
+        } elseif ($output['counts']['images'] > 0) {
+            return redirect('/results/images/1');
         } elseif ($output['counts']['pdfs'] > 0) {
             return redirect('/results/pdfs/1');
-        } elseif ($output['counts']['html'] > 0) {
-            return redirect('/results/html/1');
         } else {
             return view('results.error')->with('data', $params);
         }
@@ -629,6 +656,204 @@ class SearchController extends Controller
         dump($response);
     }
 
+    public function prepare_pubstring($publications){
+
+        $pub_string = '';
+
+        if (is_array($publications)){
+            $pub_array = [];
+            foreach ($publications as $pub){
+                if (isset($pub['NEWSPAPER'])){
+                    array_push($pub_array, $pub['NEWSPAPER']);
+                } else {
+                    array_push($pub_array, $pub);
+                }
+            }
+            $pub_array = array_unique($pub_array);
+            $pub_string = implode(", ", $pub_array);
+            
+        } else {
+            $pub_string = $publications;
+        }
+
+        return $pub_string;
+    }
+
+    public function prepare_story_data($loid){
+        $content_server_ip = Config::get('elastic.content_server.ip');
+        $content_server_port = Config::get('elastic.content_server.port');
+        $content_server_url = 'http://' . $content_server_ip . ':' . $content_server_port;
+
+        $metadata = $this->get_meta_one($loid);
+
+        $story_data = [];
+        $story_data['loid'] = $loid;
+        $story_data['path'] = $metadata['_source']['SYSTEM']['ALERTPATH'];
+        
+        $story_data['url'] = $content_server_url . $story_data['path'];
+        $story_data['index'] = $metadata['_index'];
+        $story_data['filename'] = $metadata['_source']['OBJECTINFO']['NAME'];
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
+            $publications = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
+            $story_data['publication'] = $this->prepare_pubstring($publications);
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PAGEREFERENCE'])){
+            $story_data['pageref'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PAGEREFERENCE'];
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
+            $date = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
+            $story_data['createddate'] = date("d-M-Y", strtotime($date));
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'])){
+            $story_data['category'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'];
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'])){
+            $pubdate = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'];
+            $story_data['pubdate'] = date("d-M-Y", strtotime($pubdate));
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])){
+            $story_data['author'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
+        }
+
+        $encodedurl = rawurlencode($story_data['url']);
+        $fixed_slashes = \str_replace("%2F", "/", $encodedurl);
+        $fixed_url = \str_replace("%3A", ":", $fixed_slashes);
+        $storyxml = file_get_contents($fixed_url);
+        $storyxml = \str_replace('xml-formTemplate', 'formTemplate', $storyxml);
+
+        $story_obj = new \SimpleXMLElement($storyxml);
+        $doc_content = $this->prepare_story_html($story_obj);
+
+        $story_data['content'] = $doc_content;
+
+        return $story_data;
+        
+    }
+    function prepare_story_html($xml){
+        $doc_content = $xml->xpath('story');
+        $doc_content = $doc_content[0];
+        $html = '';
+        if (isset($doc_content->grouphead->headline->ln)){
+            $headline = $doc_content->grouphead->headline->ln;
+            $html .= '<h2>' . $headline . '</h2>';
+        }
+        // $photo_caption = $xml->xpath('story/photo-group/photo-caption');
+        // if (isset($photo_caption)){
+        //     foreach ($photo_caption as $cap => $content){
+        //         foreach ($content as $x){
+        //             print_r($x);
+        //         };
+        //     };
+        // }
+        $body_array = $doc_content->text->p;
+        if (isset($doc_content->text->byline->author->name)){
+            $byline = $doc_content->text->byline->author->name;
+            $html .= '<em>' . $byline . '</em>';
+        }
+        if (isset($body_array)){
+            foreach($body_array as $ptag){
+                $html .= '<p>' . $ptag . '</p>';
+            }
+        }
+        return $html;
+    }
+
+    public function prepare_image_meta($loid){
+        $images_server_ip = Config::get('elastic.content_server.ip');
+        $images_server_port = Config::get('elastic.content_server.port');
+        $images_server_url = 'http://' . $images_server_ip . ':' . $images_server_port;
+        
+        $metadata = $this->get_meta_one($loid);
+
+        $meta_keys = [
+            '[SYSTEM][ALERTPATH]',
+            '[OBJECTINFO][NAME]',
+            '[ATTRIBUTES][METADATA][PAPER][PUB_CAPTION]',
+            '[ATTRIBUTES][METADATA][GENERAL][CUSTOM_SOURCE]',
+            '[ATTRIBUTES][METADATA][PUBDATA][PAPER][NEWSPAPERS]',
+            '[ATTRIBUTES][METADATA][GENERAL][DOCAUTHOR]',
+            '[ATTRIBUTES][METADATA][INFOIMAGE][COPYRIGHT_NOTICE]',
+            '[ATTRIBUTES][METADATA][GENERAL][DOCKEYWORD]',
+            '[SYSATTRIBUTES][PROPS][IMAGEINFO][WIDTH] x [SYSATTRIBUTES].[PROPS].[IMAGEINFO].[HEIGHT]',
+            '[SYSATTRIBUTES][PROPS][IMAGEINFO][COLORTYPE]',
+            '[ATTRIBUTES][METADATA][GENERAL][DATE_CREATED]',
+            '[OBJECTINFO][TYPE]'
+        ];
+
+        $image_data['loid'] = $loid;
+        $image_data['index'] = $metadata['_index'];
+        if (isset($metadata['_source']['SYSTEM']['ALERTPATH'])){
+            $image_path = $metadata['_source']['SYSTEM']['ALERTPATH'];
+        } else {
+            $image_path = "unable to read path.";
+        }
+
+        $image_data['url'] = $images_server_url . $image_path;
+
+        // Check if metadata differs between index. Maybe that is why it's sometimes PAPER and sometimes GENERAL
+
+        if (isset($metadata['_source']['OBJECTINFO']['NAME'])){
+            $image_data['filename'] = $metadata['_source']['OBJECTINFO']['NAME'];
+        } else {
+            $image_data['filename'] = "Unable to read name.";
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'])){
+            $image_data['caption'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'];        
+        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'])) {
+            $image_data['caption'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'];
+        }
+        
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'])){
+            $image_data['source'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'];        
+        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
+            $image_data['source'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
+            $publications = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
+            $image_data['publication'] = $this->prepare_pubstring($publications);
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'])){
+            $image_data['author'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'];        
+        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])) {
+            $image_data['author'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'])){
+            $image_data['copyright'] = $metadata['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'];        
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
+            if ( isset($image_data['caption']) && $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'] != $image_data['caption']){
+                $image_data['keywords'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];        
+            }
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
+            $image_data['newspapers'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
+        }
+
+        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'])){
+            $image_data['width'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'];
+        }
+
+        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'])){
+            $image_data['height'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'];
+        }
+
+        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'])){
+            $image_data['colourspace'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'];
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
+            $date = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
+            $image_data['date'] = date("d-M-Y", strtotime($date));
+        }
+
+        return $image_data;
+    }
+
     public function get_meta_one($loid){
         $query_string = Session::get('query_string');
         $index = $query_string['index'];
@@ -637,22 +862,22 @@ class SearchController extends Controller
         $type = "EOM::File";
         $item_url = "http://" . $server_address . ":" . $server_port . "/" . $index . "/" . $type  . "/" . $loid;
         $metadata_json = file_get_contents($item_url);
-        $metadata = json_decode($metadata_json);
+        $metadata = json_decode($metadata_json, JSON_PRETTY_PRINT);
         return $metadata;
     }
 
     public function meta_dump($loid){
         $metadata = SearchController::get_meta_one($loid);
-        dd($metadata);
+        return view('current_meta')->with('metadata', $metadata);
     }
 
     public function show_imageviewer($loid){
-        $metadata = SearchController::get_meta_one($loid);
+        $metadata = $this->prepare_image_meta($loid);
         return view('results.imageviewer')->with('metadata', $metadata);
     }
 
     public function show_storyviewer($loid){
-        $story = $this->get_meta_one($loid);
+        $story = $this->prepare_story_data($loid);
         return view('results.storyviewer')->with('story', $story);
     }
 

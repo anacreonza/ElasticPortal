@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers;
+use App\Http\Controllers\SearchController;
 
 $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
 $status_json = file_get_contents($status_json_url);
@@ -10,8 +11,7 @@ sort($status);
 if (Session::get('indices')){
     $indices = Session::get('indices');
 } else {
-    SearchController::get_indices();
-    $indices = Session::get('indices');
+    return redirect('advanced_search.blade.php');
 
 }
 $searched_terms = Session::get('terms');

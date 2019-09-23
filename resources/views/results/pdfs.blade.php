@@ -14,13 +14,10 @@
     }
     $ending_item = $ending_item - 1;
 ?>
-@extends('results.results')
-@section('header')
-    <title>Archive | Results</title>
-@endsection
+@extends('layouts.app')
 @section('content')
+    <div class="container">
     <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-<div class="flex-container">
         @component('results.navtabs')
         @slot('current_page')
             pdfs

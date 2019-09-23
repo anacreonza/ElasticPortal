@@ -10,11 +10,11 @@
             @for ($i = 1; $i <= $number_of_pages; $i++)
             <li 
                 @if ($current_page_no == "$i")
-                    class="active"
+                    class="page-item active"
                 @else
-                    class="inactive"               
+                    class="page-item inactive"               
                 @endif
-                ><a href="/results/{{$current_page}}/{{$i}}">{{$i}}</a></li>
+                ><a class="page-link" href="/results/{{$current_page}}/{{$i}}">{{$i}}</a></li>
             @endfor
         @endif
     </ul>

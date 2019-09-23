@@ -1,14 +1,5 @@
-h1 {
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-    padding-top: 10pt;
-    padding-bottom: 10pt;
-}
 input[type="text"] {
-    font-size:24px;
-}
-html body {
-    background-color: gainsboro;
+    font-size:22px;
 }
 .search-button {
     display: flex;
@@ -24,15 +15,6 @@ html body {
     font-size: 8pt;
 }
 .nav-tabs {
-    display: block;
-    width: 100%;
-}
-.search-bar-text {
-    font-size: 12pt;
-}
-.flex-container {
-    display: flex;
-    flex-wrap: wrap;
     width: 100%;
 }
 .images-background {
@@ -65,7 +47,7 @@ html body {
     margin: 5px;
 }
 .image-description-text {
-    font-size: 10pt;
+    font-size: 11pt;
 }
 .image-container {
     width: min-content;
@@ -75,14 +57,51 @@ html body {
     float: left;
 }
 .story-background {
+    float: left;
     background-color: white;
     padding: 20px;
     width: 100%;
 }
-.story-container {
-    padding: 10px;
-    margin: 5px;
+
+.meta-block {
+    float: left;
+    padding-left: 50pt;
+    padding-top: 20pt;
+    width: min-content;
 }
+.meta-table {
+    border: 1pt;
+    border-radius: 5pt;
+    width: 100%;
+}
+.meta-table-div {
+    padding-left: 10pt;
+    padding-right: 10pt;
+    padding-top: 4pt;
+    padding-bottom: 4pt;
+}
+.meta-table-head {
+    padding-left: 10pt;
+    padding-right: 10pt;
+    padding-top: 4pt;
+    padding-bottom: 4pt;
+    background: #428bca;
+    color: white;
+}
+
+.story-preview {
+    float: left;
+    padding-left: 10pt;
+    padding-right: 30pt;
+    padding-bottom: 20pt;
+    width: 500pt;
+    background: white;
+}
+.story-title{
+    font-size: 18pt;
+    font-weight: 700;
+}
+
 .story-description {
     display: inline;
     flex-wrap: wrap;
@@ -125,10 +144,7 @@ html body {
     padding-bottom: 30pt;
     background-color: gainsboro;
 }
-.form-control {
-    font-size: 18pt;
-    height: 50px;
-}
+
 .image-preview {
     opacity: 1;
     display: block;
@@ -186,4 +202,14 @@ html body {
 .error-bar {
     background-color: pink;
     width: 100%;
+}
+.card{
+    margin-bottom: 15px;
+}
+.story-card {
+    width: 100%;
+}
+
+.view-link {
+    float: right;
 }

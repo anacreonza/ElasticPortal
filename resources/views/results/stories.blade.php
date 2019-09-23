@@ -14,13 +14,16 @@
     }
     $ending_item = $ending_item - 1;
 ?>
-@extends('results.results')
+@extends('layouts.app')
 @section('header')
     <title>Archive | Results</title>
 @endsection
 @section('content')
-<p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-    <div class="flex-container">
+<div class="container">
+    <div class="row justify-content-center">
+        <div>
+            <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
+        </div>
         @component('results.navtabs')
             @slot('current_page')
                 stories
@@ -38,7 +41,6 @@
                 {{$output['counts']['html']}}
             @endslot
         @endcomponent
-        <div class="story-background">
         @component('results.pagination')
             @slot('current_page')
                 stories
@@ -54,36 +56,37 @@
             @endslot
         @endcomponent
         @for ($i = $starting_item; $i < $ending_item; $i++)
-        <div class="story-container">
-                <div class="story-item">
-                    <table class="table">
+            <div class="card story-card">
+                <div class="card-header">
+                    <span class="story-title">{{$display_array[$i]['title']}}</span>
+                    <span class="view-link"><a href="/storyviewer/{{$display_array[$i]['loid']}}">View</a></span>
+                </div>
+                <div class="card-body">
+                    @if (isset($display_array[$i]['highlight']['CONTENT.XMLFLAT']))
+                        <span class="item-label">Highlights:</span>
+                            @foreach ($display_array[$i]['highlight']['CONTENT.XMLFLAT'] as $highlight)
+                                ...{!!$highlight!!}...
+                            @endforeach
+                    @endif
+                </div>
+                <div class="card-footer">
+                    <table class="meta-table">
                         <tr>
-                            <td colspan="4" class="story-description-title"><span class="item-label">Title: </span>{{$display_array[$i]['title']}}</td>
+                            <td colspan="2"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</td>
+                            <td><span class="item-label">Archive: </span>{{$display_array[$i]['archive']}}</td>
+                            <td><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
                         </tr>
                         <tr>
-                            <td class="story-description-text-col1"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</td>
-                            <td class="story-description-text-col2"><span class="item-label">Archive: </span>{{$display_array[$i]['archive']}}</td>
-                            <td class="story-description-text-col2"><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
-                            <td class="story-description-text-col2"><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
-                        </tr>
-                        @if (isset($display_array[$i]['highlight']['CONTENT.XMLFLAT']))
-                            <tr><td class="story-description-text" colspan="4">
-                            <span class="item-label">Highlights:</span>
-                                @foreach ($display_array[$i]['highlight']['CONTENT.XMLFLAT'] as $highlight)
-                                    ...{!!$highlight!!}...
-                                @endforeach
-                        @endif
-                        </td></tr>
-                        <tr>
-                            <td class="story-description-text"><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</td>
-                            <td class="story-description-text"><span class="item-label">Author: </span>{{$display_array[$i]['author']}}</td>
-                            <td class="story-description-text"><span class="item-label">Date Published: </span>{{$display_array[$i]['date']}}</td>
-                            <td class="story-description-text"><a href="/storyviewer/{{$display_array[$i]['loid']}}">View</a></td>
+                            <td><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
+                            <td><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</td>
+                            <td><span class="item-label">Author: </span>{{$display_array[$i]['author']}}</td>
+                            <td><span class="item-label">Publication Date: </span>{{$display_array[$i]['date']}}</td>
                         </tr>
                     </table>
                 </div>
             </div>
         @endfor
+        <br>
         @component('results.pagination')
         @slot('current_page')
             stories
@@ -99,5 +102,6 @@
         @endslot
     @endcomponent
     </div>
+</div>
 </div>
 @endsection

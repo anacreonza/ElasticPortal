@@ -1,4 +1,4 @@
-@extends('site')
+@extends('layouts.app')
 @component('searchbar')
 @slot('terms')
     {{$terms['text']}}

@@ -7,40 +7,32 @@
             $html = (int) "$html";
             ?>
             
-            @if ($images > 0)
-            @if ($current_page == "images")
-            <li class="active">
-                @else
-                <li>
-                @endif
-                <a href="/results/images/1">Images <span class="badge badge-info">{{$images}}</span></a></li>
-            @endif
-        
             @if ($stories > 0)
             @if ($current_page == "stories")
-            <li class="active">
+            <li class="nav-link active">
                 @else
-                <li>
+                <li class="nav-link">
                 @endif
                 <a href="/results/stories/1">Stories <span class="badge badge-info">{{$stories}}</span></a></li>
             @endif
-        
+
+            @if ($images > 0)
+            @if ($current_page == "images")
+            <li class="nav-link active">
+                @else
+                <li li class="nav-link">
+                @endif
+                <a href="/results/images/1">Images <span class="badge badge-info">{{$images}}</span></a></li>
+            @endif
+            
             @if ($pdfs > 0)
             @if ($current_page == "pdfs")
-            <li class="active">
+            <li class="nav-link active">
                 @else
-                <li>
+                <li li class="nav-link">
                 @endif
                 <a href="/results/pdfs/1">PDFs <span class="badge badge-info">{{$pdfs}}</span></a></li>
             @endif
         
-            @if ($html > 0)
-            @if ($current_page == "html")
-            <li class="active">
-                @else
-                <li>
-                @endif
-                <a href="/results/html/1">HTML <span class="badge badge-info">{{$html}}</span></a></li>
-            @endif
         </ul>
     </div>

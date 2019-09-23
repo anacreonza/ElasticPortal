@@ -15,13 +15,16 @@
     $ending_item = $ending_item - 1;
     
 ?>
-@extends('results.results')
+@extends('layouts.app')
 @section('header')
     <title>Archive | Results</title>
 @endsection
 @section('content')
-    <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-    <div class="flex-container">
+<div class="container">
+    <div class="row justify-content-center">
+        <div>
+            <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
+        </div>
     @component('results.navtabs')
         @slot('current_page')
             images
@@ -39,21 +42,20 @@
             {{$output['counts']['html']}}
         @endslot
     @endcomponent
-        <div class="images-background">
-            @component('results.pagination')
-                @slot('current_page')
-                    images
-                @endslot   
-                @slot('current_page_no')
-                    {{$current_page_no}}
-                @endslot
-                @slot('items_count')
-                    {{$total_items}}
-                @endslot
-                @slot('items_per_page')
-                    {{$items_per_page}}
-                @endslot
-            @endcomponent
+    @component('results.pagination')
+        @slot('current_page')
+            images
+        @endslot   
+        @slot('current_page_no')
+            {{$current_page_no}}
+        @endslot
+        @slot('items_count')
+            {{$total_items}}
+        @endslot
+        @slot('items_per_page')
+            {{$items_per_page}}
+        @endslot
+    @endcomponent
             <div class="images-container">
             @for ($i = $starting_item; $i <= $ending_item; $i++)
                 <div class="image-container">
@@ -81,4 +83,5 @@
         @endcomponent
         </div>
     </div>
+</div>
 @endsection

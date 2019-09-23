@@ -65,3 +65,19 @@ Route::get('/imageviewer/{loid}', 'SearchController@show_imageviewer');
 Route::get('/storyviewer/{loid}', 'SearchController@show_storyviewer');
 
 Route::get('/metadump/{loid}', 'SearchController@meta_dump');
+
+Route::get('/users', 'UserController@index');
+
+Route::get('/users/create', 'UserController@create');
+
+Route::get('/user/store', 'UserController@store');
+
+Route::get('/user/edit/{id}', 'UserController@edit');
+
+Route::get('/user/update/{id}', 'UserController@update');
+
+Route::get('/user/delete/{id}', 'UserController@destroy');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

@@ -1,4 +1,4 @@
-@extends('site')
+@extends('layouts.app')
 
 <?php
 $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
@@ -28,42 +28,45 @@ pri.store.size
 @endsection
 
 @section('content')
-<br><a href="/">Back to search</a>
-<h1>Indices Status</h1>
-<table class="table" style="background-color: white; font-size: 11pt">
-    <thead class="thead-light">
-        <tr>
-            <th>Index Name:</th>
-            <th>Status</th>
-            <th>UUID</th>
-            <th>Pri</th>
-            <th>Rep</th>
-            <th>Document Count</th>
-            <th>Deleted Document Count</th>
-            <th>Store Size</th>
-            <th>Primary Store Size</th>
-            <th>Health</th>
-        </tr>
-    </thead>
-    @foreach ($status as $item)
-        <tr>
-        <td>{{$item->index}}</td>
-        <td>{{$item->status}}</td>
-        <td>{{$item->uuid}}</td>
-        <td>{{$item->pri}}</td>
-        <td>{{$item->rep}}</td>
-        <td>{{$item->{"docs.count"} }}</td>
-        <td>{{$item->{"docs.deleted"} }}</td>
-        <td>{{$item->{"store.size"} }}</td>
-        <td>{{$item->{"pri.store.size"} }}</td>
-            @if ($item->health == "green")
-            <td><span class="green-dot"></span></td>
-            @else
-            <td><span class="red-dot"></span></td>
-            @endif
-        </tr>
-    @endforeach
-    
-</table>    
-<p><b>Note:</b> This page refreshes automatically every 30 seconds.</p>
+<div class="container">
+    @component('user.links')
+    @endcomponent
+    <h1>Indices Status</h1>
+    <table class="table" style="background-color: white; font-size: 11pt">
+        <thead class="thead-light">
+            <tr>
+                <th>Index Name:</th>
+                <th>Status</th>
+                <th>UUID</th>
+                <th>Pri</th>
+                <th>Rep</th>
+                <th>Document Count</th>
+                <th>Deleted Document Count</th>
+                <th>Store Size</th>
+                <th>Primary Store Size</th>
+                <th>Health</th>
+            </tr>
+        </thead>
+        @foreach ($status as $item)
+            <tr>
+            <td>{{$item->index}}</td>
+            <td>{{$item->status}}</td>
+            <td>{{$item->uuid}}</td>
+            <td>{{$item->pri}}</td>
+            <td>{{$item->rep}}</td>
+            <td>{{$item->{"docs.count"} }}</td>
+            <td>{{$item->{"docs.deleted"} }}</td>
+            <td>{{$item->{"store.size"} }}</td>
+            <td>{{$item->{"pri.store.size"} }}</td>
+                @if ($item->health == "green")
+                <td><span class="green-dot"></span></td>
+                @else
+                <td><span class="red-dot"></span></td>
+                @endif
+            </tr>
+        @endforeach
+        
+    </table>    
+    <p><b>Note:</b> This page refreshes automatically every 30 seconds.</p>
+</div>
 @endsection
