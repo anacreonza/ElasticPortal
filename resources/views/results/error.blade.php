@@ -19,10 +19,10 @@
     <title>Archive | Results</title>
 @endsection
 @section('content')
-
-<p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-<div class="flex-container">
-    <div class="images-background">
+<div class="container">
+    <div>
+        <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
+    </div>
     <div class="error">
         <h2>No results found</h2>
     </div>
@@ -35,6 +35,5 @@
         {{$json}}
         </pre>
     </div>
-</div>
 </div>
 @endsection

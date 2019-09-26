@@ -14,10 +14,13 @@
     }
     $ending_item = $ending_item - 1;
 ?>
-@extends('layouts.app')
+@extends('results.results')
+
 @section('content')
     <div class="container">
-    <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
+        <div class="row justify-content-center">
+        @component('results.navlinks')   
+        @endcomponent
         @component('results.navtabs')
         @slot('current_page')
             pdfs
@@ -35,8 +38,7 @@
             {{$output['counts']['html']}}
         @endslot
     @endcomponent
-    <div class="story-background">
-        @component('results.pagination')
+    @component('results.pagination')
         @slot('current_page')
             pdfs
         @endslot   
@@ -49,13 +51,24 @@
         @slot('items_per_page')
             {{$items_per_page}}
         @endslot
-        @endcomponent
+    @endcomponent
         @for ($i = $starting_item; $i <= $ending_item; $i++)
-        <div class="story-container">
-            <div class="story-item">
-                <div class="story-description-text"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</div>
-                <div class="story-description-text"><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</div>
-                <a href="http://152.111.25.125:4700{{$display_array[$i]['path']}}">Download <span class="glyphicon glyphicon-download"></span></a><br><br>
+        <div class="card story-card">
+            <div class="card-header">
+                {{$display_array[$i]['filename']}}
+                <span class="view-link"><a href="http://152.111.25.125:4700{{$display_array[$i]['path']}}">View</a></span>
+            </div>
+            <div class="card-body">
+                <table>
+                    <tr>
+                        <td width='200'><span class="item-label">LOID: </span>{{$display_array[$i]['loid']}}</td>
+                        <td width='150'><span class="item-label">Source: </span>{{$display_array[$i]['publication']}}</td>
+                        <td width='250'><span class="item-label">Section: </span> {{$display_array[$i]['section']}}</td>
+                        <td width='250'><span class="item-label">Author: </span> {{$display_array[$i]['author']}}</td>
+                        <td width='250'><span class="item-label">Publication Date: </span> {{$display_array[$i]['pubdate']}}</td>
+                    </tr>
+                </table>
+                {{-- <a href="/metadump/{{$display_array[$i]['loid']}}">View metadata</a> --}}
             </div>
         </div>
         @endfor
@@ -73,6 +86,6 @@
             {{$items_per_page}}
         @endslot
         @endcomponent
-   </div>
+    </div>
 </div>
 @endsection

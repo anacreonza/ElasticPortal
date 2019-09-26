@@ -1,9 +1,13 @@
 @extends('layouts.app')
-@component('searchbar')
-@slot('terms')
-    {{$terms['text']}}
-@endslot
-@slot('selected_archive')
-    {{$terms['index']}}
-@endslot
-@endcomponent
+
+@section('header')
+    <title>Archive | Results</title>
+@endsection  
+
+@section('navbar')
+    @component('layouts.navbar')
+        @slot('enable_search')
+            yes
+        @endslot
+    @endcomponent
+@endsection

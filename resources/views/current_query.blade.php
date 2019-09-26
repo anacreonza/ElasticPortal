@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('results.results')
 <?php 
 
 $body = Session::get('query_body');

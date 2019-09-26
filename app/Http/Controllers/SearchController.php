@@ -136,11 +136,30 @@ class SearchController extends Controller
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
                     $pdf['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
                 }
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
-                    $pdf['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'])){
+                    $pubdate = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'];
+                    $pdf['pubdate'] = date("d-M-Y", strtotime($pubdate));
                 } else {
-                    $pdf['keywords'] = "No keywords.";
+                    $pdf['pubdate'] = "No date info found.";
                 }
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
+                    $pdf['publication'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];        
+                } else {
+                    $pdf['publication'] = "No source info found.";
+                }
+
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['SECTION'])){
+                    $pdf['section'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['SECTION'];
+                } else {
+                    $pdf['section'] = "No section info found.";
+                }
+
+                if (isset($hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['DOCUMENTINFO']['AUTHOR'])){
+                    $pdf['author'] = $hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['DOCUMENTINFO']['AUTHOR'];
+                } else {
+                    $pdf['author'] = "No author info found.";
+                }
+
                 if ($pdf){
                     array_push($display_array['pdfs'], $pdf);
                 } else {

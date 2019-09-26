@@ -6,13 +6,11 @@ input[type="text"] {
     justify-content: center;
     align-items: center;
 }
-.search-bar {
-    background: grey;
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 10px;
-    padding-bottom: 0px;
-    font-size: 8pt;
+.search-field {
+    size: 40px;
+}
+.search-button {
+    
 }
 .nav-tabs {
     width: 100%;
@@ -98,7 +96,7 @@ input[type="text"] {
     background: white;
 }
 .story-title{
-    font-size: 18pt;
+    font-size: 16pt;
     font-weight: 700;
 }
 

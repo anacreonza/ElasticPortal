@@ -81,3 +81,7 @@ Route::get('/user/delete/{id}', 'UserController@destroy');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/phpinfo', function(){
+    return view('user/phpinfo');
+});

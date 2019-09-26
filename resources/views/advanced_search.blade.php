@@ -21,8 +21,21 @@
 @extends('layouts.app')
 @section('header')
     <title>Archive | Search</title>
+    <script>
+        $('.datepicker').datepicker({
+        format: 'yyy-mm-dd',
+        startDate: '-15y'
+        });
+    </script>
 @endsection
+
+@section('navbar')
+    @component('layouts.navbar')
+    @endcomponent
+@endsection
+
 @section('content')
+
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -36,7 +49,7 @@
     <div class="container">
         <div class="row justify-content-center">
         {{-- <h1>Media24 Newspaper Archive Search</h1> --}}
-        <div class="card">
+        <div class="card" style="width: 80%">
             <div class="card-header">Advanced Search</div>
             <div class="card-body">
                 <form action="/do_advanced_search" method="GET">
@@ -147,7 +160,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="startdate">From Date:</label>
-                                <input class="form-control" data-provide="datepicker" type="text" name="startdate" id="startdate" value="{{$selected_startdate}}">
+                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="startdate" id="startdate" value="{{$selected_startdate}}">
                             </div>
                             {{-- JQuery script for date picker --}}
                             <script type="text/javascript">
@@ -162,7 +175,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="enddate">To Date:</label>
-                                <input class="form-control" data-provide="datepicker" type="text" name="enddate" id="enddate" value="{{$selected_enddate}}">
+                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="enddate" id="enddate" value="{{$selected_enddate}}">
                             {{-- JQuery script for date picker --}}
                             <script type="text/javascript">
                                 $(document).ready(function(){
@@ -246,14 +259,13 @@
             <div class="card-footer">
                 <p>Recent changes:</p>
                 <ul>
-                    <li>Entirely new look.</li>
-                    <li>Added user login ability. Registered users can access the admin functions like stats, Kibana and the dashboard.</li>
-                    <li>Added new metadata viewing block to images.</li>
-                    <li>Fixed crash when viewing older stories with invalid XML tag in header.</li>
-                    <li>Removed quick search in navigation bar. It will return once I've figured out how to wrangle the CSS.</li>
+                    <li>Fixed areas where new look was not being used.</li>
+                    <li>Improved PDF tab by adding more metadata.</li>
+                    <li>Got date picker for selecting date range working again.</li>
+                    <li>Added back search input field for results pages.</li>
                 </ul>
                 <p>* Not implemented yet</p>
-                <p>Last updated 23-Sep-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p>Last updated 26-Sep-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
             </div>
         </div>
  </div>

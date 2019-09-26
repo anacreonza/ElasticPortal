@@ -10,7 +10,7 @@ $terms = Session::get('terms');
     <p><a href="javascript:history.back()">Back</a> | <a href="/">Advanced Search</a></p>
     <h2>Current Metadata:</h2>
     <pre>
-    {{var_dump($metadata)}}
+    {{dd($metadata)}}
     </pre>
 </div>
 @endsection

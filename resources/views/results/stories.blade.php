@@ -14,16 +14,12 @@
     }
     $ending_item = $ending_item - 1;
 ?>
-@extends('layouts.app')
-@section('header')
-    <title>Archive | Results</title>
-@endsection
+@extends('results.results')
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
-        <div>
-            <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-        </div>
+        @component('results.navlinks')   
+        @endcomponent
         @component('results.navtabs')
             @slot('current_page')
                 stories
@@ -72,12 +68,12 @@
                 <div class="card-footer">
                     <table class="meta-table">
                         <tr>
-                            <td colspan="2"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</td>
-                            <td><span class="item-label">Archive: </span>{{$display_array[$i]['archive']}}</td>
-                            <td><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
+                            <td colspan="2" width="400"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</td>
+                            <td width="300"><span class="item-label">Archive: </span>{{$display_array[$i]['archive']}}</td>
+                            <td width="300"><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
                         </tr>
                         <tr>
-                            <td><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
+                            <td width="150"><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
                             <td><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</td>
                             <td><span class="item-label">Author: </span>{{$display_array[$i]['author']}}</td>
                             <td><span class="item-label">Publication Date: </span>{{$display_array[$i]['date']}}</td>

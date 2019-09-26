@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('results.results')
 <?php
 $terms = Session::get('terms');
 $query_string = Session::get('query_string');

@@ -13,18 +13,17 @@
         $ending_item = $total_items;
     }
     $ending_item = $ending_item - 1;
-    
+    $searchbar = "enable";
 ?>
-@extends('layouts.app')
+@extends('results.results')
 @section('header')
     <title>Archive | Results</title>
 @endsection
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
-        <div>
-            <p><a href="/current_query">Current Query JSON</a><span> | </span><a href="/test">Current Raw Results</a><span> | </span><a href="/">Advanced search</a></p>
-        </div>
+        @component('results.navlinks')   
+        @endcomponent
     @component('results.navtabs')
         @slot('current_page')
             images

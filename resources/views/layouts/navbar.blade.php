@@ -1,8 +1,50 @@
+<?php
+
+use App\Http\Controllers;
+use App\Http\Controllers\SearchController;
+
+$status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
+$status_json = file_get_contents($status_json_url);
+$status = json_decode($status_json);
+sort($status);
+
+if (Session::get('indices')){
+    $indices = Session::get('indices');
+} else {
+    return redirect('advanced_search.blade.php');
+
+}
+$searched_terms = Session::get('terms');
+#die(var_dump($searched_terms));
+// $selected_pub = Session::get('selected_pub');
+// $publications = Session::get('publications');
+?>
+
 <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="{{ url('/') }}">
-            {{ config('app.name', 'Media24 Newspaper Archive Search') }}
+            Media24 Newspaper Archive Search
         </a>
+        @if(isset($enable_search) && $enable_search == "yes")
+        <div class="search-container" style="padding-left:30px">
+            <form action="/do_advanced_search" method="GET" style="display: flex;">
+                <input class="search-field" style="height:36px; width:550px; font-size:14pt;" type="text" name="text" placeholder=" Search" autofocus value="{{$searched_terms['text']}}">
+                <button type="submit" style="height:36px; width:36px; padding:0px"><i class="fas fa-search search-button"></i></button>
+                <input type="hidden" name="type" id="type" value="{{$searched_terms["type"]}}">
+                <input type="hidden" name="archive" id="archive" value="{{$searched_terms["index"]}}">
+                <input type="hidden" name="publication" id="publication" value="{{$searched_terms["publication"]}}">
+                <input type="hidden" name="sort-by" id="sort-by" value="{{$searched_terms["sort-by"]}}">
+                <input type="hidden" name="startdate" id="startdate" value="{{$searched_terms["startdate"]}}">
+                <input type="hidden" name="enddate" id="enddate" value="{{$searched_terms["enddate"]}}">
+                <input type="hidden" name="results-amount" id="results-amount" value="{{$searched_terms["results-amount"]}}">
+                <input type="hidden" name="show-amount" id="show-amount" value="{{$searched_terms["show-amount"]}}">
+                <input type="hidden" name="category" id="category" value="">
+                {{-- <input type="hidden" name="relevance" id="relevance" value="{{$searched_terms["relevance"]}}"> --}}
+                <input type="hidden" name="author" id="author" value="{{$searched_terms["author"]}}">
+                <input type="hidden" name="match" id="match" value="{{$searched_terms["match"]}}">
+            </form>
+        </div>
+        @endif
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
             <span class="navbar-toggler-icon"></span>
         </button>
