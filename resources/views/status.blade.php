@@ -27,6 +27,14 @@ pri.store.size
     <meta http-equiv="refresh" content="30" >
 @endsection
 
+@section('navbar')
+    @component('layouts.navbar')
+    @slot('enable_search')
+        no
+    @endslot
+    @endcomponent
+@endsection
+
 @section('content')
 <div class="container">
     @component('user.links')

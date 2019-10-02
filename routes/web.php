@@ -66,17 +66,17 @@ Route::get('/storyviewer/{loid}', 'SearchController@show_storyviewer');
 
 Route::get('/metadump/{loid}', 'SearchController@meta_dump');
 
-Route::get('/users', 'UserController@index');
+Route::get('/users', 'UserController@index')->middleware('auth');
 
-Route::get('/users/create', 'UserController@create');
+Route::get('/users/create', 'UserController@create')->middleware('auth');
 
-Route::get('/user/store', 'UserController@store');
+Route::get('/user/store', 'UserController@store')->middleware('auth');
 
-Route::get('/user/edit/{id}', 'UserController@edit');
+Route::get('/user/edit/{id}', 'UserController@edit')->middleware('auth');
 
-Route::get('/user/update/{id}', 'UserController@update');
+Route::get('/user/update/{id}', 'UserController@update')->middleware('auth');
 
-Route::get('/user/delete/{id}', 'UserController@destroy');
+Route::get('/user/delete/{id}', 'UserController@destroy')->middleware('auth');
 
 Auth::routes();
 

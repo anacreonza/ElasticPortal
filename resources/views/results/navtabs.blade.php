@@ -4,7 +4,6 @@
             $images = (int) "$images";
             $stories = (int) "$stories";
             $pdfs = (int) "$pdfs";
-            $html = (int) "$html";
             ?>
             
             @if ($stories > 0)

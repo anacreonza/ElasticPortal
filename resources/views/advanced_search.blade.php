@@ -4,6 +4,7 @@
     $publications = $data['publications'];
     $categories = $data['categories'];
     $types = $data['types'];
+    $authors = $data['authors'];
     $selected_type = Session::get('type');
     $selected_pub = Session::get('selected_pub');
     $selected_sorting = Session::get('sorting');

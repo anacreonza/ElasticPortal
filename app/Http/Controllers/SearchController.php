@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Config;
 use Session;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use DOMDocument;
+use App\User;
 
 class SearchController extends Controller
 {
@@ -166,91 +169,89 @@ class SearchController extends Controller
                     array_push($display_array['pdf'], "No PDFs found");
                 }
 
-            } elseif (strpos($type, 'Web')){
-                $html['loid'] = $hit['_source']['REF'];
-                $html['archive'] = $hit['_source']['ARCHIVE'];
-                $html['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
-                    $html['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];
-                } else {
-                    $html['source'] = "No source info.";
-                }
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'])){
-                    $html['category'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'];
-                } else {
-                    $html['category'] = "No category info.";
-                }
-                if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
-                    $html['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
-                } else {
-                    $html['path'] = "No path info.";
-                }
-                if (isset($hit['_source']['CONTENT']['TEXT'])){
-                    $html['text'] = $hit['_source']['CONTENT']['TEXT'];
+            // } elseif (strpos($type, 'Web')){
+            //     $html['loid'] = $hit['_source']['REF'];
+            //     $html['archive'] = $hit['_source']['ARCHIVE'];
+            //     $html['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
+            //     if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
+            //         $html['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];
+            //     } else {
+            //         $html['source'] = "No source info.";
+            //     }
+            //     if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'])){
+            //         $html['category'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'];
+            //     } else {
+            //         $html['category'] = "No category info.";
+            //     }
+            //     if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
+            //         $html['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
+            //     } else {
+            //         $html['path'] = "No path info.";
+            //     }
+            //     if (isset($hit['_source']['CONTENT']['TEXT'])){
+            //         $html['text'] = $hit['_source']['CONTENT']['TEXT'];
 
-                    $body = $html['text'];
+            //         $body = $html['text'];
 
-                    $head_start = \strpos($body, '<headline>');
-                    $head_end = \strpos($body, '</headline>');
-                    $head_len = $head_end - $head_start;
+            //         $head_start = \strpos($body, '<headline>');
+            //         $head_end = \strpos($body, '</headline>');
+            //         $head_len = $head_end - $head_start;
 
-                    $headline = \substr($body, $head_start, $head_len);
+            //         $headline = \substr($body, $head_start, $head_len);
 
-                    if ($headline == ""){
-                        $head_start = \strpos($body, '<h1>');
-                        $head_end = \strpos($body, '</h1>');
-                        $head_len = $head_end - $head_start;
-                        $headline = \substr($body, $head_start, $head_len);
-                    }
-                    $headline = \html_entity_decode($headline);
+            //         if ($headline == ""){
+            //             $head_start = \strpos($body, '<h1>');
+            //             $head_end = \strpos($body, '</h1>');
+            //             $head_len = $head_end - $head_start;
+            //             $headline = \substr($body, $head_start, $head_len);
+            //         }
+            //         $headline = \html_entity_decode($headline);
 
-                    $html['headline'] = strip_tags($headline);
+            //         $html['headline'] = strip_tags($headline);
 
-                    $body_preview_start = \strpos($body, '<body>');
-                    $body_preview_end = \strpos($body, '</body>');
-                    $body_preview_len = $body_preview_end - $body_preview_start;
+            //         $body_preview_start = \strpos($body, '<body>');
+            //         $body_preview_end = \strpos($body, '</body>');
+            //         $body_preview_len = $body_preview_end - $body_preview_start;
 
-                    $body_preview = \substr($body, $body_preview_start, $body_preview_len);
+            //         $body_preview = \substr($body, $body_preview_start, $body_preview_len);
 
-                    $body_preview = \str_replace($headline, "", $body_preview);
-                    #$body_preview = \str_replace('<iframe height="12%" width="98%" src="/disclaimer.html"></iframe>', "", $body_preview);
-                    $body_preview = \str_replace("<br>\n<br>", "", $body_preview);
-                    $body_preview = \strip_tags($body_preview, '<br>');
+            //         $body_preview = \str_replace($headline, "", $body_preview);
+            //         #$body_preview = \str_replace('<iframe height="12%" width="98%" src="/disclaimer.html"></iframe>', "", $body_preview);
+            //         $body_preview = \str_replace("<br>\n<br>", "", $body_preview);
+            //         $body_preview = \strip_tags($body_preview, '<br>');
                     
-                    $preview_length = 700;
-                    $body_preview = \substr($body_preview, 0, $preview_length);
-                    $body_preview_array = \preg_split("/[\s,]+/", $body_preview);
+            //         $preview_length = 700;
+            //         $body_preview = \substr($body_preview, 0, $preview_length);
+            //         $body_preview_array = \preg_split("/[\s,]+/", $body_preview);
 
-                    $terms = Session::get('terms');
-                    $text = $terms['text'];
+            //         $terms = Session::get('terms');
+            //         $text = $terms['text'];
 
-                    $text_terms_array = \preg_split("/[\s,]+/", $text);
+            //         $text_terms_array = \preg_split("/[\s,]+/", $text);
 
-                    foreach ($text_terms_array as $text_item){
-                        foreach ($body_preview_array as $item){
-                            if (\strcasecmp($item, $text_item) == 0){
-                                $body_preview = \str_ireplace($item , '<span class="highlighted-text">' . $item . '</span>', $body_preview);
-                            }
-                        }
-                    }
-                    $html['bodypreview'] = \html_entity_decode($body_preview);
+            //         foreach ($text_terms_array as $text_item){
+            //             foreach ($body_preview_array as $item){
+            //                 if (\strcasecmp($item, $text_item) == 0){
+            //                     $body_preview = \str_ireplace($item , '<span class="highlighted-text">' . $item . '</span>', $body_preview);
+            //                 }
+            //             }
+            //         }
+            //         $html['bodypreview'] = \html_entity_decode($body_preview);
 
-                }
+            //     }
 
-                if ($html){
-                    array_push($display_array['html'], $html);
-                } else {
-                    array_push($display_array['html'], "No HTML files found");
-                }
-
-            } else {
+                // if ($html){
+                //     array_push($display_array['html'], $html);
+                // } else {
+                //     array_push($display_array['html'], "No HTML files found");
+                // }
 
             }
         }
         $display_array['counts']['images'] = count($display_array['images']);
         $display_array['counts']['stories'] = count($display_array['stories']);
         $display_array['counts']['pdfs'] = count($display_array['pdfs']);
-        $display_array['counts']['html'] = count($display_array['html']);
+        // $display_array['counts']['html'] = count($display_array['html']);
 
         return $display_array;
     }
@@ -286,6 +287,7 @@ class SearchController extends Controller
         $data['indices'] = $this->get_indices();
         $data['publications'] = $this->get_publications();
         $data['types'] =  $this->get_types();
+        $data['authors'] =  $this->get_authors();
         $data['categories'] = $this->get_categories();
         return view('advanced_search')->with('data', $data);
 
@@ -348,6 +350,33 @@ class SearchController extends Controller
         }
         Session::put('publications', $pub_list);
         return $pub_list;
+    }
+
+    public function get_authors(){
+        $author_list = Session::get('authors');
+        if ($author_list){
+            return $author_list;
+        }
+        $params = [
+            'body' => [
+                'aggs' => [
+                    'authors' => [
+                        'terms' => [
+                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCAUTHOR',
+                            'size' => 60
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        $auths = $this->elasticsearch->search($params);
+        $authors = $auths['aggregations']['authors']['buckets'];
+        $author_list[] = 'All';
+        foreach ($authors as $author){
+            $author_list[] = $author['key'];
+        }
+        Session::put('authors', $author_list);
+        return $author_list;
     }
 
     public function get_categories(){
@@ -611,6 +640,18 @@ class SearchController extends Controller
 
         $query_body = $params['body'];
         $queried_index = $params['index'];
+
+        $user = Auth::user();
+        if (isset($user)){
+            $username = $user->name;
+        } else {
+            $username = "Anonymous user";
+        }
+
+        $user_ip = request()->ip(); // Grab the user's IP address from the request.
+
+        $message = $username . " with IP " . $user_ip . " searched in " . $terms['index'] . " for " . $terms['text'];
+        Log::info($message);
 
         $results = $this->elasticsearch->search($params);
 

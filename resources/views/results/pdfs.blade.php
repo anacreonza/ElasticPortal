@@ -34,9 +34,6 @@
         @slot('pdfs')
             {{$output['counts']['pdfs']}}
         @endslot
-        @slot('html')
-            {{$output['counts']['html']}}
-        @endslot
     @endcomponent
     @component('results.pagination')
         @slot('current_page')

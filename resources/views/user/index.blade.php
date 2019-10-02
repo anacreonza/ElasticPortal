@@ -2,6 +2,13 @@
 @section('header')
     <title>Archive | Admins</title>
 @endsection
+@section('navbar')
+    @component('layouts.navbar')
+    @slot('enable_search')
+        no
+    @endslot
+    @endcomponent
+@endsection
 @section('content')
     <script>
         jQuery(document).ready(function($) {

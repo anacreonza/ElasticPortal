@@ -1,5 +1,17 @@
 @extends('layouts.app')
 
+@section('header')
+    <title>Archive | User Home</title>
+@endsection
+
+@section('navbar')
+    @component('layouts.navbar')
+    @slot('enable_search')
+        no
+    @endslot
+    @endcomponent
+@endsection
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
