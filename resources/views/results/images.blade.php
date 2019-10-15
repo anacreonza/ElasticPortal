@@ -1,19 +1,25 @@
 <?php
+    // Need to do the search from inside the view.
+    // Should probably write a helper to do this
+
+    use \App\Http\Controllers\SearchController;
+    
+    $current_type = "image"; // rather use OBJECTINFO.TYPE: image its more general
+    $current_page = $page;
+
     $terms = Session::get('terms');
+    $terms['type'] = $current_type;
+
     $output = Session::get('output');
-    $items_per_page = Session::get('items_per_page');
-    $items_per_page = (int) "$items_per_page";
-    $current_page_no = (int) "$page";
-    $total_items = $output['counts']['images'];
-    $total_items = (float) "$total_items";
-    $starting_item = $items_per_page * $current_page_no - $items_per_page;
-    $ending_item = $starting_item + $items_per_page;
-    $display_array = array_values($output['images']);
-    if ($ending_item > $total_items){
-        $ending_item = $total_items;
-    }
-    $ending_item = $ending_item - 1;
-    $searchbar = "enable";
+    $hits_count = Session::get('item_counts');
+    $total_items = $hits_count['images'];
+    $page_offset = $page - 1;
+    $terms['from'] = $terms['size'] * $page_offset + 1;
+
+    $results = SearchController::run_search($terms);
+
+    $display_array = SearchController::prepare_results($results);
+    
 ?>
 @extends('results.results')
 @section('header')
@@ -24,59 +30,39 @@
     <div class="row justify-content-center">
         @component('results.navlinks')   
         @endcomponent
-    @component('results.navtabs')
-        @slot('current_page')
-            images
-        @endslot
-        @slot('images')
-            {{$output['counts']['images']}}
-        @endslot
-        @slot('stories')
-            {{$output['counts']['stories']}}
-        @endslot
-        @slot('pdfs')
-            {{$output['counts']['pdfs']}}
-        @endslot
-    @endcomponent
-    @component('results.pagination')
-        @slot('current_page')
-            images
-        @endslot   
-        @slot('current_page_no')
-            {{$current_page_no}}
-        @endslot
-        @slot('items_count')
-            {{$total_items}}
-        @endslot
-        @slot('items_per_page')
-            {{$items_per_page}}
-        @endslot
-    @endcomponent
-            <div class="images-container">
-            @for ($i = $starting_item; $i <= $ending_item; $i++)
-                <div class="image-container">
-                        <div class="image-item">
-                            <a href="/imageviewer/{{$display_array[$i]['loid']}}">
-                                <img src="http://152.111.25.125:4700{{$display_array[$i]['path']}}?f=image_lowres" alt="{{$display_array[$i]['path']}}" height="220px" class="image-preview" name="image">
-                            </a>
-                        </div>
-                    </div>
-            @endfor
-            </div>
-            @component('results.pagination')
+        @component('results.navtabs')
+            @slot('current_page')
+                images
+            @endslot
+        @endcomponent
+        @component('results.pagination')
             @slot('current_page')
                 images
             @endslot   
             @slot('current_page_no')
-                {{$current_page_no}}
-            @endslot
-            @slot('items_count')
-                {{$output['counts']['images']}}
-            @endslot
-            @slot('items_per_page')
-                {{$items_per_page}}
+                {{$page}}
             @endslot
         @endcomponent
+            <div class="images-container">
+            @foreach($display_array as $item)
+                <div class="image-container">
+                    <div class="image-item">
+                        <a href="/imageviewer/{{$item['loid']}}">
+                            <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+            </div>
+        @component('results.pagination')
+            @slot('current_page')
+                images
+            @endslot   
+            @slot('current_page_no')
+                {{$page}}
+            @endslot
+        @endcomponent
+            
         </div>
     </div>
 </div>

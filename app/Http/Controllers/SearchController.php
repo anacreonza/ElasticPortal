@@ -26,23 +26,25 @@ class SearchController extends Controller
         ];
         $this->elasticsearch = ClientBuilder::create()->setHosts($hosts)->build();
         # Need to use this $elasticsearch object's methods like get().
+        $this->meta_keys = Config::get('meta_mappings.keys');
+
     }
     
-    public function prepare_results(){
+    public static function prepare_results(){
+
+        //Pick out the pieces fo teh results that we need.
+
         $results = Session::get('results');
         $hits = $results['hits'];
         $hits = $hits['hits'];
         $display_array = array();
-        $display_array['images'] = array();
-        $display_array['stories'] = array();
-        $display_array['pdfs'] = array();
-        $display_array['html'] = array();
+
         foreach ($hits as $hit){
             $display_item = array();
             # Deal with the different types of items:
             $type = $hit['_source']['OBJECTINFO']['TYPE'];
-            
             if (strpos($type, 'Image')){
+                $image['score'] = $hit['_score'];
                 $image['loid'] = $hit['_source']['REF'];
                 $image['archive'] = $hit['_source']['ARCHIVE'];
                 $image['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
@@ -56,12 +58,6 @@ class SearchController extends Controller
                 } else {
                     $image['source'] = "No source info.";
                 }
-
-                // if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])){
-                //     $image['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
-                // } else {
-                //     $image['source'] = "No source info.";
-                // }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
                     $image['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
                 } else {
@@ -77,7 +73,7 @@ class SearchController extends Controller
                 } else {
                     $image['path'] = "No path info.";
                 }
-                array_push($display_array['images'], $image);
+                array_push($display_array, $image);
             } elseif (strpos($type, 'Story')){
                 $story['loid'] = $hit['_source']['REF'];
                 $story['archive'] = $hit['_source']['ARCHIVE'];
@@ -131,7 +127,7 @@ class SearchController extends Controller
                     $story['path'] = "No path info.";
                 }
 
-                array_push($display_array['stories'], $story);
+                array_push($display_array, $story);
             } elseif (strpos($type, 'PDF')){
                 $pdf['loid'] = $hit['_source']['REF'];
                 $pdf['archive'] = $hit['_source']['ARCHIVE'];
@@ -164,101 +160,34 @@ class SearchController extends Controller
                 }
 
                 if ($pdf){
-                    array_push($display_array['pdfs'], $pdf);
-                } else {
-                    array_push($display_array['pdf'], "No PDFs found");
+                    array_push($display_array, $pdf);
                 }
-
-            // } elseif (strpos($type, 'Web')){
-            //     $html['loid'] = $hit['_source']['REF'];
-            //     $html['archive'] = $hit['_source']['ARCHIVE'];
-            //     $html['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
-            //     if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
-            //         $html['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];
-            //     } else {
-            //         $html['source'] = "No source info.";
-            //     }
-            //     if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'])){
-            //         $html['category'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'];
-            //     } else {
-            //         $html['category'] = "No category info.";
-            //     }
-            //     if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
-            //         $html['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
-            //     } else {
-            //         $html['path'] = "No path info.";
-            //     }
-            //     if (isset($hit['_source']['CONTENT']['TEXT'])){
-            //         $html['text'] = $hit['_source']['CONTENT']['TEXT'];
-
-            //         $body = $html['text'];
-
-            //         $head_start = \strpos($body, '<headline>');
-            //         $head_end = \strpos($body, '</headline>');
-            //         $head_len = $head_end - $head_start;
-
-            //         $headline = \substr($body, $head_start, $head_len);
-
-            //         if ($headline == ""){
-            //             $head_start = \strpos($body, '<h1>');
-            //             $head_end = \strpos($body, '</h1>');
-            //             $head_len = $head_end - $head_start;
-            //             $headline = \substr($body, $head_start, $head_len);
-            //         }
-            //         $headline = \html_entity_decode($headline);
-
-            //         $html['headline'] = strip_tags($headline);
-
-            //         $body_preview_start = \strpos($body, '<body>');
-            //         $body_preview_end = \strpos($body, '</body>');
-            //         $body_preview_len = $body_preview_end - $body_preview_start;
-
-            //         $body_preview = \substr($body, $body_preview_start, $body_preview_len);
-
-            //         $body_preview = \str_replace($headline, "", $body_preview);
-            //         #$body_preview = \str_replace('<iframe height="12%" width="98%" src="/disclaimer.html"></iframe>', "", $body_preview);
-            //         $body_preview = \str_replace("<br>\n<br>", "", $body_preview);
-            //         $body_preview = \strip_tags($body_preview, '<br>');
-                    
-            //         $preview_length = 700;
-            //         $body_preview = \substr($body_preview, 0, $preview_length);
-            //         $body_preview_array = \preg_split("/[\s,]+/", $body_preview);
-
-            //         $terms = Session::get('terms');
-            //         $text = $terms['text'];
-
-            //         $text_terms_array = \preg_split("/[\s,]+/", $text);
-
-            //         foreach ($text_terms_array as $text_item){
-            //             foreach ($body_preview_array as $item){
-            //                 if (\strcasecmp($item, $text_item) == 0){
-            //                     $body_preview = \str_ireplace($item , '<span class="highlighted-text">' . $item . '</span>', $body_preview);
-            //                 }
-            //             }
-            //         }
-            //         $html['bodypreview'] = \html_entity_decode($body_preview);
-
-            //     }
-
-                // if ($html){
-                //     array_push($display_array['html'], $html);
-                // } else {
-                //     array_push($display_array['html'], "No HTML files found");
-                // }
-
+            } elseif (strpos($type, 'Document')){
+                $other_docs['loid'] = $hit['_source']['REF'];
+                $other_docs['archive'] = $hit['_source']['ARCHIVE'];
+                $other_docs['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
+                if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
+                    $other_docs['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
+                }
+                if (isset($hit['_source']['OBJECTINFO']['NAME'])){
+                    $other_docs['name'] = $hit['_source']['OBJECTINFO']['NAME'];
+                }
+                if (isset($hit['_source']['SYSTEM']['OBJECTTYPE'])){
+                    $other_docs['object_type'] = $hit['_source']['SYSTEM']['OBJECTTYPE'];
+                }
+                if ($other_docs){
+                    array_push($display_array, $other_docs);
+                }
             }
         }
-        $display_array['counts']['images'] = count($display_array['images']);
-        $display_array['counts']['stories'] = count($display_array['stories']);
-        $display_array['counts']['pdfs'] = count($display_array['pdfs']);
-        // $display_array['counts']['html'] = count($display_array['html']);
 
         return $display_array;
     }
 
-    public static function image_lookup($loid){
-        $image_details = "http://152.111.25.182:9200/published@methcarch_eomjse11_arch_search/Image/" . $loid;
-        return $image_details;
+    public static function var_dump2($info){
+        echo('<pre>');
+        var_dump($info);
+        echo('</pre>');
     }
 
     public function get_indices(){
@@ -272,8 +201,9 @@ class SearchController extends Controller
         sort($status);
         $indices = count($status);
         $indices_array = [];
+        $selected_indices = Config::get('elastic.selected_indices');
         foreach ($status as $item){
-            if ($item->index == "notpublished@methcarch_eomjse11_arch" || $item->index == "published@methcarch_eomjse11_arch"){
+            if (in_array($item->index, $selected_indices)){
                 array_push($indices_array, $item->index);
             }
         }
@@ -335,7 +265,7 @@ class SearchController extends Controller
                 'aggs' => [
                     'publications' => [
                         'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword',
+                            'field' => $this->meta_keys['product'],
                             'size' => 60
                         ]
                     ]
@@ -362,7 +292,7 @@ class SearchController extends Controller
                 'aggs' => [
                     'authors' => [
                         'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCAUTHOR',
+                            'field' => $this->meta_keys['docauthor'],
                             'size' => 60
                         ]
                     ]
@@ -389,7 +319,7 @@ class SearchController extends Controller
                 'aggs' => [
                     'categories' => [
                         'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.CATEGORY',
+                            'field' => $this->meta_keys['category'],
                             'size' => 20
                         ]
                     ]
@@ -421,7 +351,7 @@ class SearchController extends Controller
                 'aggs' => [
                     'document_types' => [
                         'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
+                            'field' => $this->meta_keys['doctype_exact'],
                             'size' => 12
                         ]
                     ]
@@ -440,7 +370,7 @@ class SearchController extends Controller
                 'aggs' => [
                     'Publications' => [
                         'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword',
+                            'field' => $this->meta_keys['product'],
                             'size' => 60
                         ]
                     ]
@@ -460,48 +390,150 @@ class SearchController extends Controller
         return view('stats')->with('data', $data);
     }
 
-    public function do_advanced_search(Request $request){
-        #$request->flash();
-        // $validated_data = $request->validate([
-        //     'archive' => 'required',
-        //     'type' => 'required',
-        //     'enddate' => 'before:now',
-        //     'startdate' => 'before:enddate'
-        // ]);
-        $terms = array();
-        $terms['index'] = $_GET['archive'];
-        $terms['type'] = $_GET['type'];
-        $terms['text'] = $_GET['text'];
-        $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
-        $terms['publication'] = $_GET['publication'];
-        $terms['sort-by'] = $_GET['sort-by'];
-        $terms['startdate'] = $_GET['startdate'];
-        $terms['enddate'] = $_GET['enddate'];
-        
-        $request->validate([
-            'text' => 'required'
-        ]);
-
-        if ($terms['enddate'] != ''){
-            $validated_data = $request->validate([
-                'enddate' => 'before:now',
-                'startdate' => 'required'
-            ]);
+    public function count_doctypes($results){
+        $counts = array();
+        $counts['stories'] = 0;
+        $counts['images'] = 0;
+        $counts['pdfs'] = 0;
+        $counts['other_docs'] = 0;
+        $buckets = $results['aggregations']['doctypes']['buckets'];
+        foreach ($buckets as $bucket) {
+            switch ($bucket['key']) {
+                case 'Story':
+                    $amt = $bucket['doc_count'];
+                    $counts['stories'] += $amt;
+                    break;
+                case 'PDFPage':
+                    $amt = $bucket['doc_count'];
+                    $counts['pdfs'] += $amt;
+                    break;
+                case 'ExternalCopy':
+                    $amt = $bucket['doc_count'];
+                    $counts['stories'] += $amt;
+                    break;
+                case 'WirePhoto':
+                    $amt = $bucket['doc_count'];
+                    $counts['images'] += $amt;
+                    break;
+                case ' Story ':
+                    $amt = $bucket['doc_count'];
+                    $counts['stories'] += $amt;
+                    break;
+                case 'Image':
+                    $amt = $bucket['doc_count'];
+                    $counts['images'] += $amt;
+                    break;
+                case 'WireGraphic':
+                    $amt = $bucket['doc_count'];
+                    $counts['images'] += $amt;
+                    break;
+                case 'WireText':
+                    $amt = $bucket['doc_count'];
+                    $counts['stories'] += $amt;
+                    break;
+                case 'Page':
+                    $amt = $bucket['doc_count'];
+                    $counts['other_docs'] += $amt;
+                    break;
+                case 'EmailText':
+                    $amt = $bucket['doc_count'];
+                    $counts['other_docs'] += $amt;
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            }
         }
-        if ($terms['startdate'] != ''){
-            $validated_data = $request->validate([
-                'startdate' => 'before:enddate',
-                'enddate' => 'required'
-            ]);
+        Session::put('item_counts', $counts);
+        return $counts;
+    }
+
+    public static function run_search($terms){
+
+        $query = SearchController::build_query($terms);
+
+        # Put the search terms in the session
+        Session::put('terms', $terms);
+
+        # Put the query into the session:
+        Session::put('query_string', $query);
+
+        # Build URL for Elastic server from config
+        $server_address = Config::get('elastic.server.ip');
+        $server_port = Config::get('elastic.server.port');
+        $hosts = [
+            $server_address . ":" . $server_port
+        ];
+        $elasticsearch = ClientBuilder::create()->setHosts($hosts)->build();
+
+        $results = $elasticsearch->search($query);
+
+        # Place the search results into the session.
+        Session::put('results', $results);
+
+        # Log the search
+        SearchController::write_to_log($terms);
+
+        return $results;
+    }
+
+    public static function write_to_log($terms){
+        $user = Auth::user();
+        if (isset($user)){
+            $username = $user->name;
+        } else {
+            $username = "Anonymous user";
         }
 
-        $terms['results-amount'] = $_GET['results-amount'];
-        $terms['show-amount'] = $_GET['show-amount'];
-        $terms['author'] = $_GET['author'];
-        $terms['match'] = $_GET['match'];
-        $terms['categories'] = $_GET['category'];
-        $date_range['start'] = $terms['startdate'];
-        $date_range['end'] = $terms['enddate'];
+        $user_ip = request()->ip(); // Grab the user's IP address from the request.
+
+        $message = $username . " with IP " . $user_ip . " searched in " . $terms['index'] . " for " . $terms['text'];
+        Log::info($message);
+    }
+
+    public static function build_query($terms){
+
+        # Build up query from form terms
+
+        $meta_keys = Config::get('meta_mappings.keys');
+        $filters = [];
+
+        #die(SearchController::var_dump2($terms['text']));
+
+        $text_terms = $terms['text'];
+
+        $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
+        $termcount = count($text_terms_array);
+        $all_terms_string = "";
+        foreach ($text_terms_array as $term) {
+            $all_terms_string .= " AND " . $term;
+        }
+        $all_terms_string = \substr($all_terms_string, 5);
+
+        if(isset($terms['type'])){
+            $type_filter = [
+                'term' => [
+                    $meta_keys['objecttype'] => $terms['type'] //OBJECTINFO.TYPE is more general than DOCTYPE.exact
+                ]
+            ];
+            $filters[] = $type_filter;
+        }
+ 
+        if ($terms['publication'] != 'All'){
+            $pub_filter = [
+                'term' => [
+                    $meta_keys['product'] => $terms['publication']
+                ]
+            ];
+            $filters[] = $pub_filter;
+        }
+
+        if (isset($terms['from'])){
+            $from = $terms['from'];
+        } else {
+            $from = 0;
+        }
 
         switch ($terms['sort-by']) {
             case 'date':
@@ -522,54 +554,18 @@ class SearchController extends Controller
                 break;
         }
 
-        #$relevance = $terms['relevance'];
-
-        #$relevance_string = '"min_score": ' . $relevance . ',';
-        $termstext = $terms['text'];
-        $resultsamount = $terms['results-amount'];
-
-        $selected_pub = $terms['publication'];
-        $selected_type = $terms['type'];
-        $filters = [];
-
-        $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
-        $termcount = count($text_terms_array);
-        $all_terms_string = "";
-        foreach ($text_terms_array as $term) {
-            $all_terms_string .= " AND " . $term;
-        }
-        $all_terms_string = \substr($all_terms_string, 5);
-
-        if ($selected_type != 'All'){
-            $type_filter = [
-                'term' => [
-                    'ATTRIBUTES.METADATA.GENERAL.DOCTYPE' => $selected_type
-                ]
-            ];
-            $filters[] = $type_filter;
-        }
-
-        if ($selected_pub != 'All'){
-            $pub_filter = [
-                'term' => [
-                    'ATTRIBUTES.METADATA.PUBDATA.PAPER.PRODUCT.keyword' => $selected_pub
-                ]
-            ];
-            $filters[] = $pub_filter;
-        }
-
-        if ($date_range['start'] != '' || $date_range['end'] != ''){
-            if ($date_range['start'] == ''){
-                $date_range['start'] = '1970-01-01';
+        if ($terms['startdate'] != '' || $terms['enddate'] != ''){
+            if ($terms['startdate'] == ''){
+                $terms['startdate'] = '1970-01-01';
             }
-            if ($date_range['end'] == ''){
-                $date_range['end'] = 'now';
+            if ($terms['enddate'] == ''){
+                $terms['enddate'] = 'now';
             }
             $date_range_filter = [
                 'range' => [
-                    'SYSATTRIBUTES.PROPS.PRODUCTINFO.ISSUEDATE' => [
-                        'gte' => $date_range['start'],
-                        'lte' => $date_range['end']
+                    $meta_keys['issuedate'] => [
+                        'gte' => $terms['startdate'],
+                        'lte' => $terms['enddate']
                     ]
                 ]
             ];
@@ -583,14 +579,7 @@ class SearchController extends Controller
                 'multi_match' => [ 
                     "query" => $terms['text'],
                     "type" => "phrase",
-                    "fields" => [
-                        'CONTENT.XMLFLAT',
-                        'CONTENT.TEXT',
-                        'ATTRIBUTES.METADATA.GENERAL.DOCKEYWORD',
-                        'ATTRIBUTES.METADATA.GENERAL.DOCTITLE',
-                        'ATTRIBUTES.METADATA.GENERAL.CUSTOM_CAPTION',
-                        'SYSATTRIBUTES.PROPS.SUMMARY',
-                        ]
+                    "fields" => $meta_keys['textsearch_fields']
                     ]
                 ];
         } elseif($terms['match'] == 'allwords'){
@@ -610,10 +599,9 @@ class SearchController extends Controller
             ];
         }
 
-        # Build up query
-        
-        $params = [
+        $query = [
             'index' => $terms['index'],
+            'from' => $from,
             'body' => [
                 'query' => [
                     'bool' => [
@@ -623,7 +611,7 @@ class SearchController extends Controller
                         'filter' => $filters
                     ]
                 ],
-                'size' => $resultsamount,
+                // 'size' => $resultsamount,
                 'sort' => [
                     $sort_string => $sort_order
                 ],
@@ -634,78 +622,111 @@ class SearchController extends Controller
                         'CONTENT.XMLFLAT' => new \stdClass() # Needs empty object - won't accept empty array.
                     ],
                     'fragment_size' => 200
+                ],
+                'size' => $terms['size'],
+                'min_score' => 15
+            ]
+        ];
+
+        if(isset($terms['aggs'])){
+            $query['body']['aggs'] = $terms['aggs'];
+        }
+
+        Session::put('query_string', $query);
+
+        $json_query = json_encode($query, JSON_PRETTY_PRINT);
+
+        // die(SearchController::var_dump2($json_query));
+
+        return $query;
+    }
+
+    public function do_advanced_search(Request $request){
+        
+        # Get all the terms from the form
+
+        $terms = array();
+        $terms['index'] = $_GET['archive'];
+        $selected_type = $_GET['type'];
+        $terms['text'] = $_GET['text'];
+        $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
+        $terms['publication'] = $_GET['publication'];
+        $terms['sort-by'] = $_GET['sort-by'];
+        $terms['startdate'] = $_GET['startdate'];
+        $terms['enddate'] = $_GET['enddate'];
+        $terms['size'] = $_GET['size'];
+        $terms['author'] = $_GET['author'];
+        $terms['match'] = $_GET['match'];
+        $terms['categories'] = $_GET['category'];
+
+        # Validate them
+        
+        $request->validate([
+            'text' => 'required'
+        ]);
+
+        if ($terms['enddate'] != ''){
+            $validated_data = $request->validate([
+                'enddate' => 'before:now',
+                'startdate' => 'required'
+            ]);
+        }
+        if ($terms['startdate'] != ''){
+            $validated_data = $request->validate([
+                'startdate' => 'before:enddate',
+                'enddate' => 'required'
+            ]);
+        }
+
+        # Send the search terms to the searcher to get the aggregations first
+
+        #$terms['type'] = 'story';
+
+        $terms['aggs'] = [
+            "doctypes" => [
+                "terms" => [
+                    "field" => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
+                    "size" => 10
                 ]
             ]
         ];
 
-        $query_body = $params['body'];
-        $queried_index = $params['index'];
+        $results = SearchController::run_search($terms);
 
-        $user = Auth::user();
-        if (isset($user)){
-            $username = $user->name;
-        } else {
-            $username = "Anonymous user";
-        }
+        #die(SearchController::var_dump2($results));
+        # Then return the view - the view itself will trigger the actual content search.
 
-        $user_ip = request()->ip(); // Grab the user's IP address from the request.
+        Session::put('total_hits', $results['hits']['total']);
 
-        $message = $username . " with IP " . $user_ip . " searched in " . $terms['index'] . " for " . $terms['text'];
-        Log::info($message);
+        $doctype_counts = $this->count_doctypes($results);
 
-        $results = $this->elasticsearch->search($params);
-
-        # Put the search parameters into the session:
-        Session::put('query_string', $params);
-        Session::put('query_body', $query_body);
-        Session::put('queried_index', $queried_index);
-        Session::put('terms', $terms);
-        Session::put('selected_type', $terms['type']);
-        Session::put('selected_pub', $selected_pub);
-        Session::put('sorting', $terms['sort-by']);
-        Session::put('maxresults', $terms['results-amount']);
-        Session::put('maxperpage', $terms['show-amount']);
-        Session::put('author', $terms['author']);
-        Session::put('match', $terms['match']);
-        if ($date_range['start'] != '1970-01-01'){
-            Session::put('selected_startdate', $date_range['start']);
+        #Session::put('maxperpage', $terms['show-amount']);
+        if ($terms['startdate'] != '1970-01-01'){
+            Session::put('selected_startdate', $terms['startdate']);
         } else {
             Session::put('selected_startdate', '');
         }
-        if ($date_range['end'] != 'now'){
-            Session::put('selected_enddate', $date_range['end']);
+        if ($terms['enddate'] != 'now'){
+            Session::put('selected_enddate', $terms['enddate']);
         } else {
             Session::put('selected_enddate', '');
         }
 
-        # Place the search results into the session.
-        Session::put('results', $results);
-
-        $output = SearchController::prepare_results();
-
-        Session::put('output', $output);
-        Session::put('items_per_page', $terms['show-amount']);
-
-        if ($output['counts']['stories'] > 0){
+        if ($doctype_counts['stories'] > 0){
             return redirect('/results/stories/1');
-        } elseif ($output['counts']['images'] > 0) {
+        } elseif ($doctype_counts['images'] > 0) {
             return redirect('/results/images/1');
-        } elseif ($output['counts']['pdfs'] > 0) {
+        } elseif ($doctype_counts['pdfs'] > 0) {
             return redirect('/results/pdfs/1');
+        } elseif ($doctype_counts['other_docs'] > 0) {
+            return redirect('/results/other_docs/1');
         } else {
-            return view('results.error')->with('data', $params);
+            return view('errors.noresults');
         }
     }
 
     public function elasticsearchTest() {
-        #dump($this->elasticsearch);
-        # Might be easier to construct query in JSON - PHP is confusing and has weird syntax for empty objects.
-        # Use dot notation for sub-fields.
-        #"_source": ["ARCHIVE", "OBJECTINFO.NAME", "ATTRIBUTES", "SYSATTRIBUTES", "SYSTEM"],
-        //     $query_json = '{
-        //     "query": { "match": {"SYSATTRIBUTES.PROPS.SUMMARY": "Giraffe"} },
-        //     "size": 30
-        // }';
+
         # query_string searches all fields by default.
         $query_json = '{"query": { "query_string": {"query": "boxing"} },"size": 1000}';
         $params = [
@@ -756,6 +777,9 @@ class SearchController extends Controller
         if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
             $publications = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
             $story_data['publication'] = $this->prepare_pubstring($publications);
+        }
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
+            $story_data['type'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
         }
         if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PAGEREFERENCE'])){
             $story_data['pageref'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PAGEREFERENCE'];
@@ -825,21 +849,6 @@ class SearchController extends Controller
         
         $metadata = $this->get_meta_one($loid);
 
-        $meta_keys = [
-            '[SYSTEM][ALERTPATH]',
-            '[OBJECTINFO][NAME]',
-            '[ATTRIBUTES][METADATA][PAPER][PUB_CAPTION]',
-            '[ATTRIBUTES][METADATA][GENERAL][CUSTOM_SOURCE]',
-            '[ATTRIBUTES][METADATA][PUBDATA][PAPER][NEWSPAPERS]',
-            '[ATTRIBUTES][METADATA][GENERAL][DOCAUTHOR]',
-            '[ATTRIBUTES][METADATA][INFOIMAGE][COPYRIGHT_NOTICE]',
-            '[ATTRIBUTES][METADATA][GENERAL][DOCKEYWORD]',
-            '[SYSATTRIBUTES][PROPS][IMAGEINFO][WIDTH] x [SYSATTRIBUTES].[PROPS].[IMAGEINFO].[HEIGHT]',
-            '[SYSATTRIBUTES][PROPS][IMAGEINFO][COLORTYPE]',
-            '[ATTRIBUTES][METADATA][GENERAL][DATE_CREATED]',
-            '[OBJECTINFO][TYPE]'
-        ];
-
         $image_data['loid'] = $loid;
         $image_data['index'] = $metadata['_index'];
         if (isset($metadata['_source']['SYSTEM']['ALERTPATH'])){
@@ -856,6 +865,10 @@ class SearchController extends Controller
             $image_data['filename'] = $metadata['_source']['OBJECTINFO']['NAME'];
         } else {
             $image_data['filename'] = "Unable to read name.";
+        }
+
+        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
+            $image_data['type'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
         }
 
         if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'])){

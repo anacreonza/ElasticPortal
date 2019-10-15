@@ -1,12 +1,14 @@
 @extends('results.results')
 <?php 
 
-$body = Session::get('query_body');
-$index = Session::get('queried_index');
-$terms = Session::get('terms');
+$query_string = Session::get("query_string");
 
-$query = json_encode($query_string, JSON_PRETTY_PRINT);
+$body = $query_string['body'];
+
+$index = $query_string['index'];
+
 $query_body = json_encode($body, JSON_PRETTY_PRINT);
+
 ?>
 @section('content')
 <div class="container">

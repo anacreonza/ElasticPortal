@@ -17,13 +17,7 @@ $index = $query_string['index'];
                 <br>
                 <a href="{{$metadata['url']}}">Download <span class="glyphicon glyphicon-download"></span></a>
             </div>
-            {{-- This should be a blade component --}}
-            @if (isset($metadata['category']))
-            <div class="image-description-text"><span class="item-label">Category: </span>{{$metadata['category']}}</div>
-            @endif
-            @if (isset($metadata['type']))
-            <div class="image-description-text"><span class="item-label">Type: </span>{{$metadata['type']}}</div>
-            @endif
+            {{-- Meta Panel Blade Component --}}
             @component('meta.panel', ['meta' => $metadata])
             @endcomponent
     

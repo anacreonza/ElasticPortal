@@ -40,8 +40,8 @@ Route::prefix('/results')->group(function(){
     Route::get('pdfs/{page}', function($page){
         return view('results.pdfs')->with('page', $page);
     });
-    Route::get('html/{page}', function($page){
-        return view('results.html')->with('page', $page);
+    Route::get('other_docs/{page}', function($page){
+        return view('results.other_docs')->with('page', $page);
     });
 });
 
@@ -84,4 +84,8 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('/phpinfo', function(){
     return view('user/phpinfo');
+});
+
+Route::get('/upload', function(){
+    return view('upload.upload');
 });

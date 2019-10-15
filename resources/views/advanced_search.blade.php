@@ -104,7 +104,7 @@
                                 <select name="type" id="type" class="form-control">
                                     @foreach ($types as $type)
                                     <option value="{{$type}}"
-                                    @if ($type == $terms['type'])
+                                    @if ($type == $selected_type)
                                         selected
                                     @endif
                                     >{{$type}}</option>
@@ -153,7 +153,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="author">Author:*</label>
-                                <input type="text" name="author" id="author" class="form-control" autocomplete="off" value=""><br>
+                                <input type="text" name="author" id="author" class="form-control" autocomplete="off" value="">
                             </div>
                         </div>
                     </div>        
@@ -190,7 +190,7 @@
                     </div>
                     <div class="row">
                         <div class="col-sm-6">
-                            <div class="form-group">
+                            {{-- <div class="form-group">
                                 <label for="results-amount">Maximum number of results to return:</label>
                                 <select name="results-amount" id="results-amount" class="form-control">
                                     <option value="10" 
@@ -221,12 +221,12 @@
                                     @endif
                                     >500</option>
                                 </select>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
-                                <label for="show-amount">Number of results to show per page:</label>
-                                <select name="show-amount" id="show-amount" class="form-control">
+                                <label for="size">Results per page:</label>
+                                <select name="size" id="size" class="form-control">
                                     <option value="30" 
                                     @if ($selected_maxperpage == 30)
                                         selected
@@ -260,13 +260,13 @@
             <div class="card-footer">
                 <p>Recent changes:</p>
                 <ul>
-                    <li>Fixed areas where new look was not being used.</li>
-                    <li>Improved PDF tab by adding more metadata.</li>
-                    <li>Got date picker for selecting date range working again.</li>
-                    <li>Added back search input field for results pages.</li>
+                    <li>Updated pagination with next and previous buttons.</li>
+                    <li>Forced wrapping on items with long filenames when there are no spaces.</li>
+
+                    
                 </ul>
                 <p>* Not implemented yet</p>
-                <p>Last updated 26-Sep-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p>Last updated 15-Oct-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
             </div>
         </div>
  </div>

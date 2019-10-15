@@ -34,13 +34,14 @@ input[type="text"] {
     flex-wrap: wrap;
     background-color: white;
     margin: 5px;
-    float: left;
+    display: inline;
 }
 .image-description {
     display: inline;
     flex-wrap: wrap;
     padding: 5px;
     margin: 5px;
+    text-align: left;
 }
 .image-description-text {
     font-size: 11pt;

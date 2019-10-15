@@ -1,18 +1,30 @@
 <?php
+    // Need to do the search from inside the view.
+    // Should probably write a helper to do this
+
+    use \App\Http\Controllers\SearchController;
+    
+    $current_type = "eom.story"; //This needs to be done better - to avoid blank pages high in pagination.
+    $current_page = $page;
+
     $terms = Session::get('terms');
+    $terms['type'] = $current_type;
+    
     $output = Session::get('output');
-    $items_per_page = Session::get('items_per_page');
-    $items_per_page = (int) "$items_per_page";
-    $current_page_no = (int) "$page";
-    $total_items = $output['counts']['stories'];
-    $total_items = (float) "$total_items";
-    $starting_item = $items_per_page * $current_page_no - $items_per_page;
-    $ending_item = $starting_item + $items_per_page;
-    $display_array = array_values($output['stories']);
-    if ($ending_item > $total_items){
-        $ending_item = $total_items;
+    $hits_count = Session::get('item_counts');
+    $total_items = $hits_count['stories'];
+    $page_offset = $page - 1;
+    $terms['from'] = $terms['size'] * $page_offset + 1;
+    if($terms['from'] >= $total_items){
+        $terms['from'] = $total_items;
     }
-    $ending_item = $ending_item - 1;
+
+    Session::put('terms', $terms);
+
+    $results = SearchController::run_search($terms);
+
+    $display_array = SearchController::prepare_results($results);
+
 ?>
 @extends('results.results')
 @section('content')
@@ -24,40 +36,25 @@
             @slot('current_page')
                 stories
             @endslot
-            @slot('images')
-                {{$output['counts']['images']}}
-            @endslot
-            @slot('stories')
-                {{$output['counts']['stories']}}
-            @endslot
-            @slot('pdfs')
-                {{$output['counts']['pdfs']}}
-            @endslot
         @endcomponent
         @component('results.pagination')
             @slot('current_page')
                 stories
             @endslot   
             @slot('current_page_no')
-                {{$current_page_no}}
-            @endslot
-            @slot('items_count')
-                {{$total_items}}
-            @endslot
-            @slot('items_per_page')
-                {{$items_per_page}}
+                {{$page}}
             @endslot
         @endcomponent
-        @for ($i = $starting_item; $i < $ending_item; $i++)
+        @foreach ($display_array as $item)
             <div class="card story-card">
                 <div class="card-header">
-                    <span class="story-title">{{$display_array[$i]['title']}}</span>
-                    <span class="view-link"><a href="/storyviewer/{{$display_array[$i]['loid']}}">View</a></span>
+                    <span class="story-title">{{$item['title']}}</span>
+                    <span class="view-link"><a href="/storyviewer/{{$item['loid']}}">View</a></span>
                 </div>
                 <div class="card-body">
-                    @if (isset($display_array[$i]['highlight']['CONTENT.XMLFLAT']))
+                    @if (isset($item['highlight']['CONTENT.XMLFLAT']))
                         <span class="item-label">Highlights:</span>
-                            @foreach ($display_array[$i]['highlight']['CONTENT.XMLFLAT'] as $highlight)
+                            @foreach ($item['highlight']['CONTENT.XMLFLAT'] as $highlight)
                                 ...{!!$highlight!!}...
                             @endforeach
                     @endif
@@ -65,22 +62,23 @@
                 <div class="card-footer">
                     <table class="meta-table">
                         <tr>
-                            <td colspan="2" width="400"><span class="item-label">Filename: </span>{{$display_array[$i]['filename']}}</td>
-                            <td width="300"><span class="item-label">Archive: </span>{{$display_array[$i]['archive']}}</td>
-                            <td width="300"><span class="item-label">Source: </span>{{$display_array[$i]['source']}}</td>
+                            <td colspan="2" width="400"><span class="item-label">Filename: </span>{{$item['filename']}}</td>
+                            <td width="300"><span class="item-label">Archive: </span>{{$item['archive']}}</td>
+                            <td width="300"><span class="item-label">Source: </span>{{$item['source']}}</td>
                         </tr>
                         <tr>
-                            <td width="150"><span class="item-label">Category: </span>{{$display_array[$i]['category']}}</td>
-                            <td><span class="item-label">Keywords: </span>{{$display_array[$i]['keywords']}}</td>
-                            <td><span class="item-label">Author: </span>{{$display_array[$i]['author']}}</td>
-                            <td><span class="item-label">Publication Date: </span>{{$display_array[$i]['date']}}</td>
+                            <td width="150"><span class="item-label">Category: </span>{{$item['category']}}</td>
+                            <td><span class="item-label">Keywords: </span>{{$item['keywords']}}</td>
+                            <td><span class="item-label">Author: </span>{{$item['author']}}</td>
+                            <td><span class="item-label">Publication Date: </span>{{$item['date']}}</td>
+                            {{-- <td><span class="item-label">Relevancy Score: </span>{{$item['score']}}</td> --}}
                         </tr>
                     </table>
                 </div>
             </div>
-        @endfor
+        @endforeach
         <br>
-        @component('results.pagination')
+        {{-- @component('results.pagination')
         @slot('current_page')
             stories
         @endslot   
@@ -93,7 +91,7 @@
         @slot('items_per_page')
             {{$items_per_page}}
         @endslot
-    @endcomponent
+    @endcomponent --}}
     </div>
 </div>
 </div>

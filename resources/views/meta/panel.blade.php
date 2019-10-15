@@ -12,15 +12,22 @@
 
         @if (isset($meta['index']))
         <tr>
-                <td class="meta-table-div"><span class="item-label">Index: </span></td>
+            <td class="meta-table-div"><span class="item-label">Index: </span></td>
             <td>{{$meta['index']}}</td>
+        </tr>
+        @endif
+
+        @if (isset($meta['type']))
+        <tr>
+            <td class="meta-table-div"><span class="item-label">Type:</span></td>
+            <td>{{$meta['type']}}</td>
         </tr>
         @endif
 
         @if (isset($meta['filename']))
         <tr>
-                <td class="meta-table-div"><span class="item-label">Filename: </span></td>
-            <td>{{$meta['filename']}}</td>
+            <td class="meta-table-div"><span class="item-label">Filename: </span></td>
+            <td>{{wordwrap($meta['filename'], 30, "\n", true)}}</td>
         </tr>
         @endif
 
@@ -54,7 +61,7 @@
 
         @if (isset($meta['pubdate']))
         <tr>
-                <td class="meta-table-div"><span class="item-label">Publication Date: </span></td>
+            <td class="meta-table-div"><span class="item-label">Publication Date: </span></td>
             <td>{{$meta['pubdate']}}</td>
         </tr>
         @endif
