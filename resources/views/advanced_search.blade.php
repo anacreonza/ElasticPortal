@@ -47,10 +47,9 @@
         </div>
     @endif
 
-    <div class="container">
-        <div class="row justify-content-center">
+    <div class="container search-background">
         {{-- <h1>Media24 Newspaper Archive Search</h1> --}}
-        <div class="card" style="width: 80%">
+        <div class="search-card" style="width: 80%">
             <div class="card-header">Advanced Search</div>
             <div class="card-body">
                 <form action="/do_advanced_search" method="GET">
@@ -252,8 +251,8 @@
                         </div>
                     </div>    
             
-                    <div class="search-button">
-                        <button type="submit" class="btn btn-primary">Search</button>
+                    <div>
+                        <button type="submit" class="search-button">Search</button>
                     </div>
                 </form>
             </div>

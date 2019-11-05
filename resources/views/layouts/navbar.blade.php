@@ -70,6 +70,7 @@ $searched_terms = Session::get('terms');
                         </a>
 
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                            <a href="/upload/form" class="dropdown-item">Upload Content</a>
                             <a href="/home" class="dropdown-item">Admin Page</a>
                             <a class="dropdown-item" href="{{ route('logout') }}"
                                onclick="event.preventDefault();

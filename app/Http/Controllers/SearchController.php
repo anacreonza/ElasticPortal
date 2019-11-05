@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Config;
 use Session;
+use Cookie;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +33,12 @@ class SearchController extends Controller
     
     public static function prepare_results(){
 
-        //Pick out the pieces fo teh results that we need.
+        //Pick out the pieces fo the results that we need.
 
         $results = Session::get('results');
         $hits = $results['hits'];
         $hits = $hits['hits'];
+
         $display_array = array();
 
         foreach ($hits as $hit){
@@ -46,6 +48,7 @@ class SearchController extends Controller
             if (strpos($type, 'Image')){
                 $image['score'] = $hit['_score'];
                 $image['loid'] = $hit['_source']['REF'];
+
                 $image['archive'] = $hit['_source']['ARCHIVE'];
                 $image['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
@@ -181,6 +184,14 @@ class SearchController extends Controller
             }
         }
 
+        $loids = Array();
+
+        foreach ($display_array as $item){
+            array_push($loids, $item['loid']);
+        }
+        
+        Session::put('loids', $loids);
+
         return $display_array;
     }
 
@@ -188,6 +199,18 @@ class SearchController extends Controller
         echo('<pre>');
         var_dump($info);
         echo('</pre>');
+    }
+
+    public static function get_next_and_previous_loid($loid){
+        $loids = Session::get('loids');
+        $current_loid_index = array_search($loid, $loids);
+        $next_loid = $loids[$current_loid_index + 1];
+        Session::put('next_loid', $next_loid);
+
+        if ($current_loid_index != 0){
+            $previous_loid = $loids[$current_loid_index - 1];
+            Session::put('previous_loid', $previous_loid);
+        } 
     }
 
     public function get_indices(){
@@ -224,7 +247,8 @@ class SearchController extends Controller
     }
 
     public function get_types(){
-        $doctype_list = Session::get('types');
+        $doctype_list = Cookie::get('types');
+        #$doctype_list = Session::get('types');
         if ($doctype_list){
             return $doctype_list;
         }
@@ -251,7 +275,7 @@ class SearchController extends Controller
                 $doctype_list[] = $typename;
             }
         }
-        Session::put('types', $doctype_list);
+        Cookie::put('types', $doctype_list);
         return $doctype_list;
     }
 

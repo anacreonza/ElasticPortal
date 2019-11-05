@@ -22,14 +22,14 @@
     Session::put('terms', $terms);
 
     $results = SearchController::run_search($terms);
-
+    
     $display_array = SearchController::prepare_results($results);
 
 ?>
 @extends('results.results')
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
+    <div class="">
         @component('results.navlinks')   
         @endcomponent
         @component('results.navtabs')
@@ -45,6 +45,7 @@
                 {{$page}}
             @endslot
         @endcomponent
+        <div class="story-container">
         @foreach ($display_array as $item)
             <div class="card story-card">
                 <div class="card-header">
@@ -77,8 +78,8 @@
                 </div>
             </div>
         @endforeach
-        <br>
-        {{-- @component('results.pagination')
+    </div>
+    {{-- @component('results.pagination')
         @slot('current_page')
             stories
         @endslot   

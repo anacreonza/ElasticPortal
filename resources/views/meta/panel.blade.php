@@ -1,4 +1,4 @@
-<div class="card">
+<aside class="card">
     <div class="card-header">
         Metadata
     </div>
@@ -124,4 +124,4 @@
 
 
     </table>
-</div>
+</aside>

@@ -4,7 +4,5 @@
     @endcomponent
 @endsection
 @section('content')
-<div class="container">
-    <h1>Upload File</h1>
-</div>    
+    <h1>Upload successful</h1>
 @endsection

@@ -86,6 +86,5 @@ Route::get('/phpinfo', function(){
     return view('user/phpinfo');
 });
 
-Route::get('/upload', function(){
-    return view('upload.upload');
-});
+Route::get('/upload/form', 'UploadController@uploadForm');
+Route::post('/upload/files', 'UploadController@uploadSubmit');
