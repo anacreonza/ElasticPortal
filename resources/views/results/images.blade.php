@@ -4,7 +4,9 @@
 
     use \App\Http\Controllers\SearchController;
     
-    $current_type = "image"; // rather use OBJECTINFO.TYPE: image its more general
+    $current_type = [
+        "image"
+    ]; 
     $current_page = $page;
 
     $terms = Session::get('terms');
@@ -27,7 +29,7 @@
 @endsection
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
+    <div class="">
         @component('results.navlinks')   
         @endcomponent
         @component('results.navtabs')
@@ -35,34 +37,31 @@
                 images
             @endslot
         @endcomponent
-        @component('results.pagination')
-            @slot('current_page')
-                images
-            @endslot   
-            @slot('current_page_no')
-                {{$page}}
-            @endslot
-        @endcomponent
-            <div class="images-container">
+        <div class="items-container">
+            @component('results.pagination')
+                @slot('current_page')
+                    images
+                @endslot   
+                @slot('current_page_no')
+                    {{$page}}
+                @endslot
+            @endcomponent
             @foreach($display_array as $item)
-                <div class="image-container">
-                    <div class="image-item">
-                        <a href="/imageviewer/{{$item['loid']}}">
-                            <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
-                        </a>
-                    </div>
+                <div class="image-item">
+                    <a href="/imageviewer/{{$item['loid']}}">
+                        <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
+                    </a>
                 </div>
             @endforeach
+            @component('results.pagination')
+                @slot('current_page')
+                    images
+                @endslot   
+                @slot('current_page_no')
+                    {{$page}}
+                @endslot
+            @endcomponent
             </div>
-        @component('results.pagination')
-            @slot('current_page')
-                images
-            @endslot   
-            @slot('current_page_no')
-                {{$page}}
-            @endslot
-        @endcomponent
-            
         </div>
     </div>
 </div>

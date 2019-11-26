@@ -49,7 +49,7 @@
 
     <div class="container search-background">
         {{-- <h1>Media24 Newspaper Archive Search</h1> --}}
-        <div class="search-card" style="width: 80%">
+        <div class="search-card">
             <div class="card-header">Advanced Search</div>
             <div class="card-body">
                 <form action="/do_advanced_search" method="GET">
@@ -144,7 +144,7 @@
                                 <label for="category">Category:</label>
                                 <select name="category" id="category" class="form-control">
                                     @foreach ($categories as $category)
-                                        <option value={{$category['name']}}>{{$category['name']}}</option>
+                                        <option value={{$category}}>{{$category}}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -188,7 +188,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-6">
+                        {{-- <div class="col-sm-6">
                             {{-- <div class="form-group">
                                 <label for="results-amount">Maximum number of results to return:</label>
                                 <select name="results-amount" id="results-amount" class="form-control">
@@ -220,8 +220,8 @@
                                     @endif
                                     >500</option>
                                 </select>
-                            </div> --}}
-                        </div>
+                            </div>
+                        </div> --}}
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="size">Results per page:</label>
@@ -257,15 +257,19 @@
                 </form>
             </div>
             <div class="card-footer">
+                <p>* Not implemented yet</p>
+                <p>Please note this site is still experimental and may be unstable.</p>
                 <p>Recent changes:</p>
                 <ul>
+                    <li>Aggregation query results are stored locally now to try to speed up the site.</li>
                     <li>Updated pagination with next and previous buttons.</li>
-                    <li>Forced wrapping on items with long filenames when there are no spaces.</li>
-
-                    
+                    <li>Added ability to page through articles.</li>
+                    <li>Updated CSS to improve look of site - various cosmetic upgrades.</li>
+                    <li>Article text is now generated using an XSLT transform - to improve accuracy. Still not ideal as picture caption headlines are not distinguished from regular headlines, and articles that have nothing but picture caption text may display blank.</li>
+                    <li>Enabled config cache and removed unused libraries to improve speed.</li>
+                    <li>Updated site to handle the ASPSeek legacy index.</li>
                 </ul>
-                <p>* Not implemented yet</p>
-                <p>Last updated 15-Oct-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p>Last updated 26-Nov-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
             </div>
         </div>
  </div>

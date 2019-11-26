@@ -10,9 +10,18 @@ $appname = Config::get('app.name');
 sort($status);
 
 $searched_terms = Session::get('terms');
-#die(var_dump($searched_terms));
-// $selected_pub = Session::get('selected_pub');
-// $publications = Session::get('publications');
+
+// Deal with empty search terms to prevent the no results page crashing the navbar.
+if (!isset($searched_terms["type"])){
+    $searched_terms["type"] = "All";
+}
+if (!isset($searched_terms["index"])){
+    $searched_terms["index"] = Session::get('indices')[0];
+}
+if (!isset($searched_terms["publication"])){
+    $searched_terms["publication"] = "All";
+}
+
 ?>
 
 <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
@@ -24,8 +33,8 @@ $searched_terms = Session::get('terms');
         <div class="search-container" style="padding-left:30px">
             <form action="/do_advanced_search" method="GET" style="display: flex;">
                 <input class="search-field" style="height:36px; width:550px; font-size:14pt;" type="text" name="text" placeholder=" Search" autofocus value="{{$searched_terms['text']}}">
-                <button type="submit" style="height:36px; width:36px; padding:0px"><i class="fas fa-search search-button"></i></button>
-                <input type="hidden" name="type" id="type" value="{{$searched_terms["type"]}}">
+                <button type="submit" class="search-button-mini"><i class="fas fa-search"></i></button>
+                <input type="hidden" name="type" id="type" value="{{serialize($searched_terms["type"])}}">
                 <input type="hidden" name="archive" id="archive" value="{{$searched_terms["index"]}}">
                 <input type="hidden" name="publication" id="publication" value="{{$searched_terms["publication"]}}">
                 <input type="hidden" name="sort-by" id="sort-by" value="{{$searched_terms["sort-by"]}}">

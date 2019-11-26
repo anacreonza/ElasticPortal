@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Config;
 use Session;
-use Cookie;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -132,6 +132,7 @@ class SearchController extends Controller
 
                 array_push($display_array, $story);
             } elseif (strpos($type, 'PDF')){
+                $pdf['score'] = $hit['_score'];
                 $pdf['loid'] = $hit['_source']['REF'];
                 $pdf['archive'] = $hit['_source']['ARCHIVE'];
                 $pdf['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
@@ -165,8 +166,9 @@ class SearchController extends Controller
                 if ($pdf){
                     array_push($display_array, $pdf);
                 }
-            } elseif (strpos($type, 'Document')){
+            } else {
                 $other_docs['loid'] = $hit['_source']['REF'];
+                $other_docs['score'] = $hit['_score'];
                 $other_docs['archive'] = $hit['_source']['ARCHIVE'];
                 $other_docs['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
@@ -177,6 +179,13 @@ class SearchController extends Controller
                 }
                 if (isset($hit['_source']['SYSTEM']['OBJECTTYPE'])){
                     $other_docs['object_type'] = $hit['_source']['SYSTEM']['OBJECTTYPE'];
+                }
+                if (isset($hit['highlight'])){
+                    $other_docs['highlight'] = $hit['highlight'];
+                }
+                if (isset($hit['_source']['CONTENT']['TEXT'])){
+                    $html = $hit['_source']['CONTENT']['TEXT'];
+                    $other_docs['preview'] = SearchController::prepare_aspseek_html($html);
                 }
                 if ($other_docs){
                     array_push($display_array, $other_docs);
@@ -214,8 +223,17 @@ class SearchController extends Controller
     }
 
     public function get_indices(){
-        $indices_array = Session::get('indices');
-        if ($indices_array){
+
+        // Try to get the indices from the session or a cookie before falling back on doing the slow aggs search.
+
+        $cached_indices = Session::get('indices');
+    
+        if (isset($cached_indices)){
+            $indices_array = $cached_indices;
+            return $indices_array;
+        } elseif (isset($_COOKIES['Indices'])){
+            $indices_json = $_COOKIE['Indices'];
+            $indices_array = \json_decode($indices_json);
             return $indices_array;
         }
         $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
@@ -230,8 +248,9 @@ class SearchController extends Controller
                 array_push($indices_array, $item->index);
             }
         }
-        
+        $indices_json = \json_encode($indices_array);
         Session::put('indices', $indices_array);
+        setcookie('Indices', $indices_json, time()+(3600*12)); //3600 = 1 hour
         return $indices_array;
     }
 
@@ -247,9 +266,14 @@ class SearchController extends Controller
     }
 
     public function get_types(){
-        $doctype_list = Cookie::get('types');
-        #$doctype_list = Session::get('types');
-        if ($doctype_list){
+        
+        $cached_types = Session::get('types');
+
+        if (isset($cached_types)){
+            return $cached_types;
+        } elseif (isset($_COOKIES['Types'])){
+            $doctypes_json = $_COOKIE['Types'];
+            $doctype_list = \json_decode($doctypes_json);
             return $doctype_list;
         }
         $params = [
@@ -258,7 +282,7 @@ class SearchController extends Controller
                     'document_types' => [
                         'terms' => [
                             'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
-                            'size' => 12
+                            'size' => 20
                         ]
                     ]
                 ]
@@ -275,15 +299,26 @@ class SearchController extends Controller
                 $doctype_list[] = $typename;
             }
         }
-        Cookie::put('types', $doctype_list);
+        $doctypes_json = \json_encode($doctype_list);
+        Session::put('types', $doctype_list);
+        setcookie('Types', $doctypes_json, time()+(3600*12));
         return $doctype_list;
     }
 
     public function get_publications(){
-        $pub_list = Session::get('publications');
-        if ($pub_list){
-            return $pub_list;
+        
+        $cached_publications = Session::get('publications');
+        
+        if (isset($cached_publications)){
+            return $cached_publications;
+        } elseif (isset($_COOKIE['Publications'])){
+            $pub_list_json = $_COOKIE['Publications'];
+            if ($pub_list_json){
+                $pub_list = \json_decode($pub_list_json);
+                return $pub_list;
+            }
         }
+
         $params = [
             'body' => [
                 'aggs' => [
@@ -302,14 +337,22 @@ class SearchController extends Controller
         foreach ($publications as $publication){
             $pub_list[] = $publication['key'];
         }
+        $pub_list_json = \json_encode($pub_list);
         Session::put('publications', $pub_list);
+        setcookie('Publications', $pub_list_json, time()+(3600*12));
         return $pub_list;
     }
 
     public function get_authors(){
-        $author_list = Session::get('authors');
-        if ($author_list){
-            return $author_list;
+        
+        if($cached_authors = Session::get('authors')){
+            return $cached_authors;
+        } elseif (isset($_COOKIE['Authors'])){
+            $author_list_json = $_COOKIE['Authors'];
+            if ($author_list_json){
+                $author_list = \json_decode($author_list_json);
+                return $author_list;
+            }
         }
         $params = [
             'body' => [
@@ -329,15 +372,23 @@ class SearchController extends Controller
         foreach ($authors as $author){
             $author_list[] = $author['key'];
         }
+        $author_list_json = \json_encode($author_list);
         Session::put('authors', $author_list);
+        setcookie('Authors', $author_list_json, time()+(3600*12));
         return $author_list;
     }
 
     public function get_categories(){
-        $cat_list = Session::get('categories');
-        if ($cat_list){
+        
+        $cached_categories = Session::get('categories');
+        if (isset($cached_categories)){
+            return $cached_categories;
+        } elseif (isset($_COOKIE['Categories'])){
+            $cat_list_json = $_COOKIE['Categories'];
+            $cat_list = \json_decode($cat_list_json);
             return $cat_list;
         }
+
         $params = [
             'body' => [
                 'aggs' => [
@@ -354,18 +405,22 @@ class SearchController extends Controller
         $cats = $this->elasticsearch->search($params);
         $categories = $cats['aggregations']['categories']['buckets'];
 
-        $total_doc_count = 0;
+
+        $cat_list[] = 'All';
+        
         foreach ($categories as $category){
-            $cat = [];
-            $cat['name'] = $category['key'];
-            $cat['count'] = $category['doc_count'];
-            $cat_list[] = $cat;
-            $total_doc_count += $category['doc_count'];
+            // $cat = [];
+            // $cat['name'] = $category['key'];
+            // $cat['count'] = $category['doc_count'];
+            $cat_list[] = $category['key'];
+            // $total_doc_count += $category['doc_count'];
         }
-        $all = ['name' => 'All', 'count' => $total_doc_count];
-        $cat_list[] = $all;
+        // $all = ['name' => 'All', 'count' => $total_doc_count];
+        // $cat_list[] = $all;
         $cat_list = array_sort($cat_list);
-        Session::put('categories', $cat_list);
+
+        $cat_list_json = \json_encode($cat_list);
+        setcookie('Categories', $cat_list_json, time()+(3600*12));
         return $cat_list;
     }
 
@@ -414,61 +469,33 @@ class SearchController extends Controller
         return view('stats')->with('data', $data);
     }
 
-    public function count_doctypes($results){
+    public function classify_results($results){
+        // Classify document types
         $counts = array();
         $counts['stories'] = 0;
         $counts['images'] = 0;
-        $counts['pdfs'] = 0;
         $counts['other_docs'] = 0;
+
         $buckets = $results['aggregations']['doctypes']['buckets'];
+        #dd($buckets);
         foreach ($buckets as $bucket) {
             switch ($bucket['key']) {
-                case 'Story':
-                    $amt = $bucket['doc_count'];
-                    $counts['stories'] += $amt;
-                    break;
-                case 'PDFPage':
-                    $amt = $bucket['doc_count'];
-                    $counts['pdfs'] += $amt;
-                    break;
-                case 'ExternalCopy':
-                    $amt = $bucket['doc_count'];
-                    $counts['stories'] += $amt;
-                    break;
-                case 'WirePhoto':
-                    $amt = $bucket['doc_count'];
-                    $counts['images'] += $amt;
-                    break;
-                case ' Story ':
-                    $amt = $bucket['doc_count'];
-                    $counts['stories'] += $amt;
-                    break;
                 case 'Image':
                     $amt = $bucket['doc_count'];
                     $counts['images'] += $amt;
                     break;
-                case 'WireGraphic':
-                    $amt = $bucket['doc_count'];
-                    $counts['images'] += $amt;
-                    break;
-                case 'WireText':
+                case 'EOM::Story':
                     $amt = $bucket['doc_count'];
                     $counts['stories'] += $amt;
                     break;
-                case 'Page':
-                    $amt = $bucket['doc_count'];
-                    $counts['other_docs'] += $amt;
-                    break;
-                case 'EmailText':
-                    $amt = $bucket['doc_count'];
-                    $counts['other_docs'] += $amt;
-                    break;
-                
                 default:
-                    # code...
+                    $counts['other_docs'] += $bucket['doc_count'];
                     break;
             }
         }
+        $counts['total'] = $counts['stories']+$counts['images']+$counts['other_docs'];
+
+        #dd($counts);
         Session::put('item_counts', $counts);
         return $counts;
     }
@@ -510,9 +537,11 @@ class SearchController extends Controller
             $username = "Anonymous user";
         }
 
-        $user_ip = request()->ip(); // Grab the user's IP address from the request.
+        $user_ip = \request()->ip(); // Grab the user's IP address from the request.
 
-        $message = $username . " with IP " . $user_ip . " searched in " . $terms['index'] . " for " . $terms['text'];
+        $user_agent = \request()->server('HTTP_USER_AGENT');
+
+        $message = "Username: " . $username . ", IP: " . $user_ip . ", UserAgent: " . $user_agent . ", Index: " . $terms['index'] . ", Text: " . $terms['text'];
         Log::info($message);
     }
 
@@ -537,7 +566,7 @@ class SearchController extends Controller
 
         if(isset($terms['type'])){
             $type_filter = [
-                'term' => [
+                'terms' => [ // Use terms rather than term - so we can use an array of terms.
                     $meta_keys['objecttype'] => $terms['type'] //OBJECTINFO.TYPE is more general than DOCTYPE.exact
                 ]
             ];
@@ -704,13 +733,11 @@ class SearchController extends Controller
 
         # Send the search terms to the searcher to get the aggregations first
 
-        #$terms['type'] = 'story';
-
         $terms['aggs'] = [
             "doctypes" => [
                 "terms" => [
-                    "field" => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
-                    "size" => 10
+                    "field" => 'SYSTEM.OBJECTTYPE',
+                    "size" => 20
                 ]
             ]
         ];
@@ -722,7 +749,7 @@ class SearchController extends Controller
 
         Session::put('total_hits', $results['hits']['total']);
 
-        $doctype_counts = $this->count_doctypes($results);
+        $doctype_counts = $this->classify_results($results);
 
         #Session::put('maxperpage', $terms['show-amount']);
         if ($terms['startdate'] != '1970-01-01'){
@@ -740,8 +767,6 @@ class SearchController extends Controller
             return redirect('/results/stories/1');
         } elseif ($doctype_counts['images'] > 0) {
             return redirect('/results/images/1');
-        } elseif ($doctype_counts['pdfs'] > 0) {
-            return redirect('/results/pdfs/1');
         } elseif ($doctype_counts['other_docs'] > 0) {
             return redirect('/results/other_docs/1');
         } else {
@@ -826,10 +851,19 @@ class SearchController extends Controller
         $encodedurl = rawurlencode($story_data['url']);
         $fixed_slashes = \str_replace("%2F", "/", $encodedurl);
         $fixed_url = \str_replace("%3A", ":", $fixed_slashes);
-        $storyxml = file_get_contents($fixed_url);
-        $storyxml = \str_replace('xml-formTemplate', 'formTemplate', $storyxml);
 
-        $story_obj = new \SimpleXMLElement($storyxml);
+        // Need to remove illegal XML tag from file or DOMDocument has conniption fits.
+
+        $illegal_tag = "<?xml-formTemplate /SysConfig/Templates/Son/Daily/story_brief.xpt?>";
+        $story_raw = file_get_contents($fixed_url);
+        $story_raw = \str_replace('xml-formTemplate', 'formTemplate', $story_raw);
+    
+        $story_obj = new \DOMDocument();
+        $story_obj->loadXML($story_raw);
+
+        // $storyxml = file_get_contents($fixed_url);
+        // $storyxml = \str_replace('xml-formTemplate', 'formTemplate', $storyxml);
+
         $doc_content = $this->prepare_story_html($story_obj);
 
         $story_data['content'] = $doc_content;
@@ -838,32 +872,38 @@ class SearchController extends Controller
         
     }
     function prepare_story_html($xml){
-        $doc_content = $xml->xpath('story');
-        $doc_content = $doc_content[0];
-        $html = '';
-        if (isset($doc_content->grouphead->headline->ln)){
-            $headline = $doc_content->grouphead->headline->ln;
-            $html .= '<h2>' . $headline . '</h2>';
+
+        // Run an XSLT transform to convert the XML to HTML.
+
+        $xsl = new \DOMDocument();
+        $xsl->load('xslt/ArchContentHTML.xsl');
+        $xslproc = new \XSLTProcessor();
+        $xsl = $xslproc->importStylesheet($xsl);
+        $xslproc->setParameter(null, "", "");
+        $html = $xslproc->transformToDoc($xml);
+        return $html->saveHTML();
+
+    }
+
+    public static function prepare_aspseek_html($html){
+
+        $bodystart = strpos($html, '<body>');
+
+        $body = \substr($html, $bodystart+6);
+        
+        $body = \str_replace('<iframe height="12%" width="98%" src="/disclaimer.html"></iframe>', '', $body);
+        $body = \str_replace('</body>', '', $body);
+        $body = \str_replace('</html>', '', $body);
+
+        # No preview for articles with tables - avoids all the issues that creates.
+        if (strpos($body, '<table')){
+            $body = null;
+            return $body;
         }
-        // $photo_caption = $xml->xpath('story/photo-group/photo-caption');
-        // if (isset($photo_caption)){
-        //     foreach ($photo_caption as $cap => $content){
-        //         foreach ($content as $x){
-        //             print_r($x);
-        //         };
-        //     };
-        // }
-        $body_array = $doc_content->text->p;
-        if (isset($doc_content->text->byline->author->name)){
-            $byline = $doc_content->text->byline->author->name;
-            $html .= '<em>' . $byline . '</em>';
-        }
-        if (isset($body_array)){
-            foreach($body_array as $ptag){
-                $html .= '<p>' . $ptag . '</p>';
-            }
-        }
-        return $html;
+
+        $body = \substr($body, 0, 650) . '...';
+
+        return $body;
     }
 
     public function prepare_image_meta($loid){

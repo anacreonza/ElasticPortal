@@ -4,7 +4,10 @@
 
     use \App\Http\Controllers\SearchController;
     
-    $current_type = "eom.story"; //This needs to be done better - to avoid blank pages high in pagination.
+    $current_type = [
+        "eom.story",
+        "web"
+    ];
     $current_page = $page;
 
     $terms = Session::get('terms');
@@ -18,6 +21,9 @@
     if($terms['from'] >= $total_items){
         $terms['from'] = $total_items;
     }
+
+    // Remove aggregation terms from query
+    $terms['aggs'] = Null;
 
     Session::put('terms', $terms);
 
@@ -37,6 +43,7 @@
                 stories
             @endslot
         @endcomponent
+        <div class="items-container">
         @component('results.pagination')
             @slot('current_page')
                 stories
@@ -45,7 +52,6 @@
                 {{$page}}
             @endslot
         @endcomponent
-        <div class="story-container">
         @foreach ($display_array as $item)
             <div class="card story-card">
                 <div class="card-header">
@@ -78,21 +84,16 @@
                 </div>
             </div>
         @endforeach
+        @component('results.pagination')
+            @slot('current_page')
+                stories
+            @endslot   
+            @slot('current_page_no')
+                {{$page}}
+            @endslot
+        @endcomponent
     </div>
-    {{-- @component('results.pagination')
-        @slot('current_page')
-            stories
-        @endslot   
-        @slot('current_page_no')
-            {{$current_page_no}}
-        @endslot
-        @slot('items_count')
-            {{$output['counts']['stories']}}
-        @endslot
-        @slot('items_per_page')
-            {{$items_per_page}}
-        @endslot
-    @endcomponent --}}
+
     </div>
 </div>
 </div>

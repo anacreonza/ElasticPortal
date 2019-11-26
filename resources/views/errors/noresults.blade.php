@@ -5,17 +5,18 @@
 @endsection
 <?php 
 
-$query_string = Session::get("query_string");
-
 ?>
 @section('content')
 <div class="container">
-    <p><a href="javascript:history.back()">Back</a> | <a href="/">Advanced Search</a></p>
-    <h1>No results found</h1>
-    <h4>Last Query:</h4>
-    <pre>
-    GET {{$query_string['index']}}/_search
-    {{json_encode($query_string['body'], JSON_PRETTY_PRINT)}}
-    </pre>
+        @component('results.navlinks')   
+        @endcomponent
+    <div class="items-container">
+        <h1>No results found</h1>
+        <p>Sorry, your last search returned no results. Perhaps try expanding your search to more publications or a wider date range.</p>
+        <a href="/">Search again</a>
+        <pre>
+            
+        </pre>
+    </div>
 </div>
 @endsection

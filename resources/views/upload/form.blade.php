@@ -37,6 +37,7 @@
 @endif
 <div class="container">
     <h1>Upload Files</h1>
+    <p>(Note: This is not working yet.)</p>
     <form action="{{url('upload/files')}}" class="dropzone" id="dropzone" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="dz-message" data-dz-message><span>Click or drag files here to upload.</span></div>

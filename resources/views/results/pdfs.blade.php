@@ -4,7 +4,7 @@
 
     use \App\Http\Controllers\SearchController;
         
-    $current_type = "pdf";
+    $current_type = ["pdf"];
     $current_page = $page;
     
     $terms = Session::get('terms');
@@ -24,7 +24,7 @@
 
 @section('content')
     <div class="container">
-        <div class="row justify-content-center">
+        <div class="">
         @component('results.navlinks')   
         @endcomponent
         @component('results.navtabs')
@@ -44,50 +44,54 @@
                 {{$hits_count['other_docs']}}
             @endslot
         @endcomponent
-        @component('results.pagination')
-            @slot('current_page')
-                pdfs
-            @endslot   
-            @slot('current_page_no')
-                {{$page}}
-            @endslot
-        @endcomponent
-        @foreach ($display_array as $item)
-        <div class="card story-card">
-            <div class="card-header">
-                {{$item['filename']}}
-                <span class="view-link"><a href="http://152.111.25.125:4700{{$item['path']}}">View</a></span>
+        <div class="items-container">
+            @component('results.pagination')
+                @slot('current_page')
+                    pdfs
+                @endslot   
+                @slot('current_page_no')
+                    {{$page}}
+                @endslot
+            @endcomponent
+
+            @foreach ($display_array as $item)
+            <div class="card story-card">
+                <div class="card-header">
+                    {{$item['filename']}}
+                    <span class="view-link"><a href="http://152.111.25.125:4700{{$item['path']}}">View</a></span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <tr>
+                            <td width='200'><span class="item-label">LOID: </span>{{$item['loid']}}</td>
+                            @if(isset($item['publication']))
+                            <td width='150'><span class="item-label">Source: </span>{{$item['publication']}}</td>
+                            @endif
+                            @if(isset($item['section']))
+                            <td width='250'><span class="item-label">Section: </span> {{$item['section']}}</td>
+                            @endif
+                            @if(isset($item['author']))
+                            <td width='250'><span class="item-label">Author: </span> {{$item['author']}}</td>
+                            @endif
+                            @if(isset($item['pubdate']))
+                            <td width='250'><span class="item-label">Publication Date: </span> {{$item['pubdate']}}</td>
+                            @endif
+                        </tr>
+                    </table>
+                    {{-- <a href="/metadump/{{$display_array[$i]['loid']}}">View metadata</a> --}}
+                </div>
             </div>
-            <div class="card-body">
-                <table>
-                    <tr>
-                        <td width='200'><span class="item-label">LOID: </span>{{$item['loid']}}</td>
-                        @if(isset($item['publication']))
-                        <td width='150'><span class="item-label">Source: </span>{{$item['publication']}}</td>
-                        @endif
-                        @if(isset($item['section']))
-                        <td width='250'><span class="item-label">Section: </span> {{$item['section']}}</td>
-                        @endif
-                        @if(isset($item['author']))
-                        <td width='250'><span class="item-label">Author: </span> {{$item['author']}}</td>
-                        @endif
-                        @if(isset($item['pubdate']))
-                        <td width='250'><span class="item-label">Publication Date: </span> {{$item['pubdate']}}</td>
-                        @endif
-                    </tr>
-                </table>
-                {{-- <a href="/metadump/{{$display_array[$i]['loid']}}">View metadata</a> --}}
-            </div>
+            @endforeach
+
+            @component('results.pagination')
+                @slot('current_page')
+                    pdfs
+                @endslot   
+                @slot('current_page_no')
+                    {{$page}}
+                @endslot
+            @endcomponent
         </div>
-        @endforeach
-        @component('results.pagination')
-            @slot('current_page')
-                pdfs
-            @endslot   
-            @slot('current_page_no')
-                {{$page}}
-            @endslot
-        @endcomponent
     </div>
 </div>
 @endsection

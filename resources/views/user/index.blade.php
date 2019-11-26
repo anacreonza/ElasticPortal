@@ -21,22 +21,25 @@
         <div class="container">
             @component('user.links')
             @endcomponent
-        <table class="table table-hover">
-            <tr>
-                <th>Name</th>
-                <th>email</th>
-                <th>Created</th>
-                <th>Updated</th>
-            </tr>
-            @foreach ($users as $user)               
-                <tr class="clickable-row" data-href="./user/edit/{{$user->id}}">
-                    <td>{{$user->name}}</td>
-                    <td>{{$user->email}}</td>
-                    <td>{{$user->created_at->diffForHumans()}}</td>
-                    <td>{{$user->updated_at->diffForHumans()}}</td>
+        <div class="items-container">
+            <table class="table table-hover">
+                <tr>
+                    <th>Name</th>
+                    <th>email</th>
+                    <th>Created</th>
+                    <th>Updated</th>
                 </tr>
-            @endforeach
-        </table>
+                @foreach ($users as $user)               
+                    {{-- <tr class="clickable-row" data-href="./user/edit/{{$user->id}}"> --}}
+                    <tr>
+                        <td>{{$user->name}}</td>
+                        <td>{{$user->email}}</td>
+                        <td>{{$user->created_at->diffForHumans()}}</td>
+                        <td>{{$user->updated_at->diffForHumans()}}</td>
+                    </tr>
+                @endforeach
+            </table>
+        </div>
         {{-- <a href="/users/create" class="btn btn-primary" role="button">Create new user</a> --}}
     </div>
 @endsection

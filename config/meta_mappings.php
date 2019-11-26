@@ -15,6 +15,7 @@ return [
         'docauthor' => 'ATTRIBUTES.METADATA.GENERAL.DOCAUTHOR',
         'name' => 'OBJECTINFO.NAME',
         'objecttype' => 'OBJECTINFO.TYPE',
+        'sysobjecttype' => 'SYSTEM.OBJECTTYPE',
 
         // Dates
         'date_created' => 'ATTRIBUTES.METADATA.GENERAL.DATE_CREATED',

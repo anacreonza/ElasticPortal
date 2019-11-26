@@ -5,7 +5,7 @@
             $current_page_no_int = (int)$current_page_no_string;
             $next_page_no = $current_page_no_int + 1;
             $previous_page_no = $current_page_no_int - 1;
-            $pagination_size = 25;
+            $pagination_size = 23;
             $pagination_start_page = $current_page_no_int - $pagination_size;
             if($pagination_start_page <= 0){
                 $pagination_start_page = 1;
