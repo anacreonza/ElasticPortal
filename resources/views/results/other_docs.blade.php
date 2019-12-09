@@ -57,8 +57,11 @@
                     @if (isset($item['preview']))
                     <div class="text-preview">{!!$item['preview']!!}</div>                        
                     @endif
-                    <div class="details" style="display: flex; justify-content: space-between;">
+                </div>
+                <div class="card-footer">
+                    <div class="meta-footer">
                         <div><span class="item-label">LOID: </span>{{$item['loid']}}</div>
+                        <div><span class="item-label">Filename: </span>{{$item['filename']}}</div>
                         <div><span class="item-label">Score: </span>{{$item['score']}}</div>
                         @if(isset($item['publication']))
                         <div><span class="item-label">Source: </span>{{$item['publication']}}</div>

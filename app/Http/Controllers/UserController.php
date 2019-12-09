@@ -114,4 +114,13 @@ class UserController extends Controller
         $user->delete();
         return redirect('/users');
     }
+    static function get_user_prefs(){
+
+        $default_user_prefs = new \stdClass();
+        $default_user_prefs->results_per_page = 30;
+
+        $user_prefs = $default_user_prefs;
+
+        return $user_prefs;
+    }
 }

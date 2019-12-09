@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use DOMDocument;
 use App\User;
+use \App\Http\Controllers\CookieController;
 
 class SearchController extends Controller
 {
@@ -28,7 +29,7 @@ class SearchController extends Controller
         $this->elasticsearch = ClientBuilder::create()->setHosts($hosts)->build();
         # Need to use this $elasticsearch object's methods like get().
         $this->meta_keys = Config::get('meta_mappings.keys');
-
+        CookieController::initialise_cookie();
     }
     
     public static function prepare_results(){
@@ -79,6 +80,7 @@ class SearchController extends Controller
                 array_push($display_array, $image);
             } elseif (strpos($type, 'Story')){
                 $story['loid'] = $hit['_source']['REF'];
+                $story['score'] = $hit['_score'];
                 $story['archive'] = $hit['_source']['ARCHIVE'];
                 $story['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
@@ -93,31 +95,20 @@ class SearchController extends Controller
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])){
                     $story['author'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
-                } else {
-                    $story['author'] = "No author info.";
-                }
- 
+                } 
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
                     $story['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
-                } else {
-                    $story['keywords'] = "No keywords.";
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTITLE'])){
                     $story['title'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTITLE'];
-                } else {
-                    $story['title'] = "No title info.";
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'])){
                     $story['category'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CATEGORY'];
-                } else {
-                    $story['category'] = "No category info.";
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'])){
                     
                     $date = new Carbon($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION']);
                     $story['date'] = date("d-M-Y", strtotime($date));
-                } else {
-                    $story['date'] = "No date info.";
                 }
                 if (isset($hit['highlight'])){
                     $story['highlight'] = $hit['highlight'];
@@ -677,7 +668,7 @@ class SearchController extends Controller
                     'fragment_size' => 200
                 ],
                 'size' => $terms['size'],
-                'min_score' => 15
+                'min_score' => 10
             ]
         ];
 

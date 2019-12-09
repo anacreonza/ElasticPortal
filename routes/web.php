@@ -13,6 +13,7 @@
 
 use App\Article;
 use App\http\Controllers\SearchController;
+use App\http\Controllers\CookieController;
 
 Route::get('/index', function () {
     Article::createIndex($shards = null, $replicas = null);
@@ -82,9 +83,17 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
+Route::get('/changelog', function(){
+    return view('admin/changelog');
+});
+
 Route::get('/phpinfo', function(){
     return view('user/phpinfo');
 });
 
 Route::get('/upload/form', 'UploadController@uploadForm');
 Route::post('/upload/files', 'UploadController@uploadSubmit');
+Route::get('/clear_cookies', function(){
+    CookieController::clear_cookies();
+    return redirect('/');
+});

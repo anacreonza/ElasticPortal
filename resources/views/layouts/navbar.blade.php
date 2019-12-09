@@ -2,6 +2,11 @@
 
 use App\Http\Controllers;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CookieController;
+CookieController::initialise_cookie();
+if (isset($_COOKIE['user_prefs'])){
+    $user_prefs = \json_decode($_COOKIE['user_prefs']);
+}
 
 $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
 $status_json = file_get_contents($status_json_url);
@@ -33,18 +38,16 @@ if (!isset($searched_terms["publication"])){
         <div class="search-container" style="padding-left:30px">
             <form action="/do_advanced_search" method="GET" style="display: flex;">
                 <input class="search-field" style="height:36px; width:550px; font-size:14pt;" type="text" name="text" placeholder=" Search" autofocus value="{{$searched_terms['text']}}">
-                <button type="submit" class="search-button-mini"><i class="fas fa-search"></i></button>
+                <button type="submit" class="search-button-mini"><i class="fa fa-search" aria-hidden="true"></i></button>
                 <input type="hidden" name="type" id="type" value="{{serialize($searched_terms["type"])}}">
                 <input type="hidden" name="archive" id="archive" value="{{$searched_terms["index"]}}">
                 <input type="hidden" name="publication" id="publication" value="{{$searched_terms["publication"]}}">
                 <input type="hidden" name="sort-by" id="sort-by" value="{{$searched_terms["sort-by"]}}">
                 <input type="hidden" name="startdate" id="startdate" value="{{$searched_terms["startdate"]}}">
                 <input type="hidden" name="enddate" id="enddate" value="{{$searched_terms["enddate"]}}">
-                <input type="hidden" name="size" id="size" value="{{$searched_terms['size']}}">
-                {{-- <input type="hidden" name="results-amount" id="results-amount" value="{{$searched_terms["results-amount"]}}"> --}}
+                <input type="hidden" name="size" id="size" value="{{$user_prefs->results_per_page}}">
                 <input type="hidden" name="show-amount" id="show-amount" value="{{Session::get('total_hits')}}">
                 <input type="hidden" name="category" id="category" value="">
-                {{-- <input type="hidden" name="relevance" id="relevance" value="{{$searched_terms["relevance"]}}"> --}}
                 <input type="hidden" name="author" id="author" value="{{$searched_terms["author"]}}">
                 <input type="hidden" name="match" id="match" value="{{$searched_terms["match"]}}">
             </form>

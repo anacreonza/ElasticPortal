@@ -1,3 +1,10 @@
+/* Variables */
+
+:root {
+    --highlight-colour: #4c7cc3;
+    --highlight-hover: #345488;
+}
+
 body {
     background-image: url('/amador-loureiro-BVyNlchWqzs-unsplash-grey.jpg');
     background-attachment: fixed;
@@ -14,22 +21,26 @@ input[type="text"] {
     display: block;
     width: 100%;
     color: #fff;
-    background: #4c7cc3;
+    background: var(--highlight-colour);
     cursor: pointer;
     border-radius: 5px;
     margin-top: 20px;
     margin-bottom: 10px;
     padding: 10px;
     border: none;
-}
-.search-button:hover{
-    background: #345488;
+    transition: background 0.4s;
 }
 .search-button-mini {
     height: 36px;
     width: 36px;
     padding: 0px;
-    color: #4c7cc3;
+    background: var(--highlight-colour);
+    color: white;
+    transition: background 0.4s;
+    border: 1px;
+}
+.search-button:hover, .search-button-mini:hover{
+    background: var(--highlight-hover);
 }
 .search-field {
     size: 40px;
@@ -51,12 +62,6 @@ input[type="text"] {
     padding: 5px;
     display: block;
 }
-.search-background {
-    /* background-color: white; */
-    /* padding: 10px;
-    border-radius: 5px; */
-}
-
 .pagi-container {
     display: flex;
     flex-wrap: wrap;
@@ -84,33 +89,24 @@ input[type="text"] {
     padding: 20px;
     width: 100%;
 }
-
+.meta-list {
+    display: grid;
+}
 .meta-block {
     float: left;
     padding-left: 50pt;
     padding-top: 20pt;
     width: 400px;
 }
-.meta-table {
-    border: 1pt;
-    border-radius: 5pt;
-    width: 100%;
+.meta-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
-.meta-table-div {
-    padding-left: 10pt;
-    padding-right: 10pt;
-    padding-top: 4pt;
-    padding-bottom: 4pt;
+.meta-footer div {
+    min-width: 200px;
+    margin-bottom: 0.4rem;
 }
-.meta-table-head {
-    padding-left: 10pt;
-    padding-right: 10pt;
-    padding-top: 4pt;
-    padding-bottom: 4pt;
-    background: #428bca;
-    color: white;
-}
-
 .story-preview {
     float: left;
     margin: 10pt;

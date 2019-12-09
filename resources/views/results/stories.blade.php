@@ -5,8 +5,7 @@
     use \App\Http\Controllers\SearchController;
     
     $current_type = [
-        "eom.story",
-        "web"
+        "eom.story"
     ];
     $current_page = $page;
 
@@ -55,8 +54,12 @@
         @foreach ($display_array as $item)
             <div class="card story-card">
                 <div class="card-header">
-                    <span class="story-title">{{$item['title']}}</span>
-                    <span class="view-link"><a href="/storyviewer/{{$item['loid']}}">View</a></span>
+                    @if (isset($item['title']))
+                        <span class="story-title">{{$item['title']}}</span>
+                    @endif
+                    @if (isset($item['loid']))
+                        <span class="view-link"><a href="/storyviewer/{{$item['loid']}}">View</a></span>
+                    @endif
                 </div>
                 <div class="card-body">
                     @if (isset($item['highlight']['CONTENT.XMLFLAT']))
@@ -67,20 +70,27 @@
                     @endif
                 </div>
                 <div class="card-footer">
-                    <table class="meta-table">
-                        <tr>
-                            <td colspan="2" width="400"><span class="item-label">Filename: </span>{{$item['filename']}}</td>
-                            <td width="300"><span class="item-label">Archive: </span>{{$item['archive']}}</td>
-                            <td width="300"><span class="item-label">Source: </span>{{$item['source']}}</td>
-                        </tr>
-                        <tr>
-                            <td width="150"><span class="item-label">Category: </span>{{$item['category']}}</td>
-                            <td><span class="item-label">Keywords: </span>{{$item['keywords']}}</td>
-                            <td><span class="item-label">Author: </span>{{$item['author']}}</td>
-                            <td><span class="item-label">Publication Date: </span>{{$item['date']}}</td>
-                            {{-- <td><span class="item-label">Relevancy Score: </span>{{$item['score']}}</td> --}}
-                        </tr>
-                    </table>
+                    <div class="meta-footer">
+                        {{-- <div class="meta-item"><span class="item-label">Filename: </span>{{$item['filename']}}</div> --}}
+                        {{-- <div class="meta-item"><span class="item-label">LOID: </span>{{$item['loid']}}</div> --}}
+                        {{-- <div class="meta-item"><span class="item-label">Archive: </span>{{$item['archive']}}</div> --}}
+                        @if (isset($item['source']))
+                        <div class="meta-item"><span class="item-label">Source: </span>{{$item['source']}}</div>
+                        @endif
+                        @if (isset($item['category']))
+                        {{-- <div class="meta-item"><span class="item-label">Category: </span>{{$item['category']}}</div> --}}
+                        @endif
+                        @if (isset($item['keywords']))
+                        <div class="meta-item"><span class="item-label">Keywords: </span>{{$item['keywords']}}</div>
+                        @endif
+                        @if (isset($item['author']))
+                        <div class="meta-item"><span class="item-label">Author: </span>{{$item['author']}}</div>
+                        @endif
+                        @if (isset($item['date']))
+                        <div class="meta-item"><span class="item-label">Date: </span>{{$item['date']}}</div>
+                        @endif
+                        <div class="meta-item"><span class="item-label">Score: </span>{{$item['score']}}</div>
+                    </div>
                 </div>
             </div>
         @endforeach

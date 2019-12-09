@@ -1,4 +1,8 @@
 <?php
+    use \App\Http\Controllers\UserController;
+
+    $user_prefs = UserController::get_user_prefs();
+
     $terms = Session::get('terms');
     $indices = $data['indices'];
     $publications = $data['publications'];
@@ -47,7 +51,7 @@
         </div>
     @endif
 
-    <div class="container search-background">
+    <div class="container">
         {{-- <h1>Media24 Newspaper Archive Search</h1> --}}
         <div class="search-card">
             <div class="card-header">Advanced Search</div>
@@ -57,7 +61,7 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <div class="form-group">
-                                <input style="height:45px" type="text" name="text" id="text" class="form-control" autocomplete="off" autofocus value="{{$terms['text']}}"><br>
+                                <input style="height:45px" type="text" name="text" id="text" class="form-control search-form" autocomplete="off" autofocus value="{{$terms['text']}}"><br>
                                 <div class="form-check-inline">
                                     <label class="form-check-label">
                                     <input type="radio" class="form-check-input"  name="match" value="allwords" @if ($selected_match_option == 'allwords')checked @endif>Match Exact Words
@@ -184,92 +188,21 @@
                                   "keyboardNavigation": true
                                  }); 
                                 });
-                                </script>                </div>
+                                </script>
+                            </div>
+                            <input type="hidden" name="size" id="size" value="{{$user_prefs->results_per_page}}">
                         </div>
                     </div>
-                    <div class="row">
-                        {{-- <div class="col-sm-6">
-                            {{-- <div class="form-group">
-                                <label for="results-amount">Maximum number of results to return:</label>
-                                <select name="results-amount" id="results-amount" class="form-control">
-                                    <option value="10" 
-                                    @if ($selected_maxresults == 10)
-                                        selected
-                                    @endif
-                                    >10</option>
-                                    <option value="50" 
-                                    @if ($selected_maxresults == 50)
-                                        selected
-                                    @endif
-                                    >50</option>
-                                    <option value="100" 
-                                    @if ($selected_maxresults == 100)
-                                        selected
-                                    @endif
-                                    >100</option>                        
-                                    <option value="300" 
-                                    @if ($selected_maxresults == 300)
-                                        selected
-                                    @endif
-                                    >300</option>
-                                    <option value="500" 
-                                    @if ($selected_maxresults == 500)
-                                        selected
-                                    @elseif (! isset($selected_maxresults))
-                                        selected
-                                    @endif
-                                    >500</option>
-                                </select>
-                            </div>
-                        </div> --}}
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="size">Results per page:</label>
-                                <select name="size" id="size" class="form-control">
-                                    <option value="30" 
-                                    @if ($selected_maxperpage == 30)
-                                        selected
-                                    @endif
-                                    >30</option>
-                                    <option value="50" 
-                                    @if ($selected_maxperpage == 50)
-                                        selected
-                                    @endif
-                                    >50</option>
-                                    <option value="100" 
-                                    @if ($selected_maxperpage == 100)
-                                        selected
-                                    @endif
-                                    >100</option>
-                                    <option value="500" 
-                                    @if ($selected_maxperpage == 500)
-                                        selected
-                                    @endif
-                                    >500</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>    
-            
                     <div>
-                        <button type="submit" class="search-button">Search</button>
+                        <button type="submit" class="search-button"><i class="fa fa-search" aria-hidden="true"></i>&nbsp;Search</button>
                     </div>
                 </form>
             </div>
             <div class="card-footer">
                 <p>* Not implemented yet</p>
                 <p>Please note this site is still experimental and may be unstable.</p>
-                <p>Recent changes:</p>
-                <ul>
-                    <li>Aggregation query results are stored locally now to try to speed up the site.</li>
-                    <li>Updated pagination with next and previous buttons.</li>
-                    <li>Added ability to page through articles.</li>
-                    <li>Updated CSS to improve look of site - various cosmetic upgrades.</li>
-                    <li>Article text is now generated using an XSLT transform - to improve accuracy. Still not ideal as picture caption headlines are not distinguished from regular headlines, and articles that have nothing but picture caption text may display blank.</li>
-                    <li>Enabled config cache and removed unused libraries to improve speed.</li>
-                    <li>Updated site to handle the ASPSeek legacy index.</li>
-                </ul>
-                <p>Last updated 26-Nov-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p>Last updated 9-Dec-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <a href="/changelog">Change Log</a>
             </div>
         </div>
  </div>
