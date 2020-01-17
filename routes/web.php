@@ -90,7 +90,10 @@ Route::get('/changelog', function(){
 Route::get('/phpinfo', function(){
     return view('user/phpinfo');
 });
-
+Route::get('/admin/logs', function(){
+    return view('admin/logs');
+});
+Route::get('/admin/logviewer', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
 Route::get('/upload/form', 'UploadController@uploadForm');
 Route::post('/upload/files', 'UploadController@uploadSubmit');
 Route::get('/clear_cookies', function(){

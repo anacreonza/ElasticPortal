@@ -13,7 +13,8 @@ use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use DOMDocument;
 use App\User;
-use \App\Http\Controllers\CookieController;
+use App\Http\Controllers\CookieController;
+use App\Http\Controllers\UserController;
 
 class SearchController extends Controller
 {
@@ -202,15 +203,21 @@ class SearchController extends Controller
     }
 
     public static function get_next_and_previous_loid($loid){
+        $surrounging_loids = [];
+        $surrounging_loids['current'] = $loid;
         $loids = Session::get('loids');
         $current_loid_index = array_search($loid, $loids);
-        $next_loid = $loids[$current_loid_index + 1];
-        Session::put('next_loid', $next_loid);
+        $results_per_page = UserController::get_user_prefs()->results_per_page;
+        if (isset($loids[$current_loid_index + 1])){
+            $next_loid = $loids[$current_loid_index + 1];
+            $surrounging_loids['next'] = $next_loid;
+        }
 
         if ($current_loid_index != 0){
             $previous_loid = $loids[$current_loid_index - 1];
-            Session::put('previous_loid', $previous_loid);
-        } 
+            $surrounging_loids['previous'] = $previous_loid;
+        }
+        return $surrounging_loids;
     }
 
     public function get_indices(){

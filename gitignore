@@ -1,3 +1,5 @@
+.DS_Store
 storage/logs
 config/elastic.php
 database/database.sqlite
+node_modules

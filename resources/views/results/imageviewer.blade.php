@@ -1,5 +1,8 @@
 @extends('results.results')
 <?php
+
+use \App\Http\Controllers\SearchController;
+
 $terms = Session::get('terms');
 $query_string = Session::get('query_string');
 $index = $query_string['index'];
@@ -15,24 +18,26 @@ if ($width > $height){
     $orientation = 'portrait';
 }
 
+$surrounding_loids = SearchController::get_next_and_previous_loid($metadata['loid']);
+
 ?>
 @section('header')
     <title>Image Viewer</title>
 @endsection
 @section('content')
 <div class="container">
-    <p><a href="javascript:history.back()">Back to results</a> | <a href="/metadump/{{$metadata['loid']}}">Raw ElasticSearch data</a></p>
-    <div class="story-background">
-    {{-- <div class="preview-background"> --}}
-            <div class="story-preview">
-                <img src="{{$image_url}}" alt="" class="image-big-preview">
-                <br>
-                <a href="{{$image_url}}">Download <span class="glyphicon glyphicon-download"></span></a>
-            </div>
-            {{-- Meta Panel Blade Component --}}
+    @component('results.item-navlinks', ['type' => 'image', 'loid' => $metadata['loid']])
+    @endcomponent
+    <div class="item-background">
+        <div class="content-preview">
+            <img src="{{$image_url}}" alt="" class="image-big-preview">
+        </div>
+        <div>
+            @component('results.item-toolbar', ['type' => 'image', 'url' => $image_url, 'surrounding_loids' => $surrounding_loids])         
+            @endcomponent
             @component('meta.panel', ['meta' => $metadata])
             @endcomponent
-    
+        </div>
     </div>
 </div>
 @endsection

@@ -53,7 +53,7 @@
 
 	<!-- Convert the doc tag to a div - also need to deal with the language attribute -->
 	<xsl:template match="doc">
-		<div class="doc"><xsl:apply-templates select="node()"/></div>
+		<div class="doc" language="{@xml:lang}"><xsl:apply-templates select="node()"/></div>
 	</xsl:template>
 
 	<!-- <xsl:template match="@story">
@@ -112,9 +112,9 @@
 		<div class="photo-group"><xsl:apply-templates select="node()"/></div>
 	</xsl:template>
 
-	<!-- Convert the fg-photo tag -->
+	<!-- Convert the fg-photo tag into an img-->
 	<xsl:template match="fg-photo">
-		<div class="fg-photo"><xsl:apply-templates select="node()"/></div>
+		<a href="http://152.111.25.125:4700{@fileref}"><img class="fg-photo" src="http://152.111.25.125:4700{@fileref}" width="420px" alt="Image"></img></a>
 	</xsl:template>
 
 	<!-- Convert the photo-caption tag -->

@@ -12,6 +12,9 @@ body {
 input[type="text"] {
     font-size:22px;
 }
+p {
+    line-height: 1.4rem;
+}
 .pic-caption {
     font-size: 12pt;
     display: inline;
@@ -48,9 +51,18 @@ input[type="text"] {
 .byline {
     font-style: italic;
 }
-.photo-group {
-    display: inline;
+/* Linkbar */
+.linkbar {
+    margin-top: 1rem;
 }
+
+/* Navbar */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
 .nav-tabs {
     width: 100%;
 }
@@ -65,7 +77,15 @@ input[type="text"] {
 .pagi-container {
     display: flex;
     flex-wrap: wrap;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
 .images-container {
     display: flex;
     flex-wrap: wrap;
@@ -82,13 +102,17 @@ input[type="text"] {
 .image-description-text {
     font-size: 11pt;
 }
-.story-background {
-    float: left;
+.item-background {
+    display: grid;
+    grid-template-columns: 6fr 4fr;
     background-color: white;
     margin-top: 10px;
-    padding: 20px;
-    width: 100%;
+    padding: 30px;
+
+    /* width: 100%; */
 }
+/* Metadata stuff */
+
 .meta-list {
     display: grid;
 }
@@ -107,11 +131,11 @@ input[type="text"] {
     min-width: 200px;
     margin-bottom: 0.4rem;
 }
-.story-preview {
-    float: left;
-    margin: 10pt;
-    width: 60%;
-    background: white;
+.meta-grid {
+    display: grid;
+    grid-template-columns: 125px auto;
+}
+.content-preview {
     padding-right: 25px;
 }
 .story-title{
@@ -196,9 +220,25 @@ input[type="text"] {
     border-radius: 50%;
     display: inline-block;
 }
-.headline h1 {
-    font-size: 20pt;
+
+/* Article content */
+
+div.doc {
+    padding-right: 2rem;
 }
+
+h1.headline {
+    font-size: 2.2rem;
+    line-height: 2.4rem;
+    padding-bottom: 1rem;
+}
+
+/* Photo-group styles */
+
+div.photo-group {
+    display: inline;
+}
+
 
 .highlighted-text {
     background-color: yellow;
@@ -221,15 +261,18 @@ input[type="text"] {
     width: 100%;
 }
 .card{
-    margin: none;
+    margin: 0;
+    margin-top: 1rem;
 }
 .search-card {
     margin: auto;
+    margin-top: 2rem;
     width: 80%;
     background: #fff;
 }
 .items-container {
-    padding: 20px;
+    padding-left: 18px;
+    padding-right: 18px;
     background: #fff;
 }
 .story-card {

@@ -10,36 +10,29 @@
     @endcomponent
 @endsection
 @section('content')
-    <script>
-        jQuery(document).ready(function($) {
-            $(".clickable-row").click(function() {
-                window.location = $(this).data("href");
-            });
-        });
-    </script>
-        
-        <div class="container">
-            @component('user.links')
-            @endcomponent
-        <div class="items-container">
-            <table class="table table-hover">
-                <tr>
-                    <th>Name</th>
-                    <th>email</th>
-                    <th>Created</th>
-                    <th>Updated</th>
-                </tr>
-                @foreach ($users as $user)               
-                    {{-- <tr class="clickable-row" data-href="./user/edit/{{$user->id}}"> --}}
+    <div class="container">
+        <div class="linkbar"><a href="/home">Back to Admin page</a></div>
+        <div class="card">
+            <div class="card-header">Registered Users</div>
+            <div class="card-body">
+                <table class="table">
                     <tr>
-                        <td>{{$user->name}}</td>
-                        <td>{{$user->email}}</td>
-                        <td>{{$user->created_at->diffForHumans()}}</td>
-                        <td>{{$user->updated_at->diffForHumans()}}</td>
+                        <th>Name</th>
+                        <th>email</th>
+                        <th>Created</th>
+                        <th>Updated</th>
                     </tr>
-                @endforeach
-            </table>
+                    @foreach ($users as $user)               
+                        <tr>
+                            <td>{{$user->name}}</td>
+                            <td>{{$user->email}}</td>
+                            <td>{{$user->created_at->diffForHumans()}}</td>
+                            <td>{{$user->updated_at->diffForHumans()}}</td>
+                            <td><a href="/user/edit/{{$user->id}}"><i class="fas fa-edit"></i></a></td>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
         </div>
-        {{-- <a href="/users/create" class="btn btn-primary" role="button">Create new user</a> --}}
     </div>
 @endsection

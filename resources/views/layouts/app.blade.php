@@ -31,10 +31,8 @@
 <body>
     <div id="app">
         @yield('navbar')
-        <main class="py-4">
-            @yield('content')
-            @yield('scripts')
-        </main>
+        @yield('content')
+        @yield('scripts')
     </div>
 </body>
 </html>
