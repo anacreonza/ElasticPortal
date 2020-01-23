@@ -1,12 +1,34 @@
 <?php
 return [
-    'keys' => [
-        // Selected document types
-        'doc_types' => [
-            'image',
-            'article',
-            'pdf'
+    // Selected document types
+    'doc_types' => [
+        'All' => [],
+        'Articles' => [
+            'story',
+            'wiretext',
+            'emailtext',
+            'externalcopy',
+            'classifieds',
+            'storyexternalcopy',
+            'story externalcopy',
+            'storystorystorystory',
+            'storystoryexternalcopy',
+            'storystorystorystorystorystory'
         ],
+        'Images' => [
+            'wirephoto',
+            'image',
+            'wiregraphic',
+            'graphic'
+        ],
+        'Other Documents' => [
+            'pdfpage',
+            'page',
+            'pdf',
+            'alchemy'
+        ]
+    ],
+    'keys' => [
         // Doc type key
         'doctype' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE',
         'doctype_exact' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',

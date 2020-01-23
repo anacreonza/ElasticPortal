@@ -12,8 +12,7 @@
         </ul>
     </div>
     @endif
-    @component('user.links')
-    @endcomponent
+    <div class="linkbar"><a href="/home">Back to user home page</a></div>
     <h2>Create new user</h2>
     <div class="story-background">
         <form action="/user/store" method="GET">

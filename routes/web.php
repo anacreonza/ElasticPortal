@@ -57,8 +57,7 @@ Route::get('/status', function(){
 Route::get('/stats', 'SearchController@get_stats');
 
 Route::get('/current_query', function(){
-    $query_string = Session::get('query_string');
-    return view('current_query')->with('query_string', $query_string);
+    return view('current_query');
 });
 
 Route::get('/imageviewer/{loid}', 'SearchController@show_imageviewer');

@@ -32,13 +32,11 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{$user->name}}"><br>
                     <label for="email">Email:</label>
                     <input type="email" name="email" id="email" class="form-control" value="{{$user->email}}"><br>
-                    <label for="password">Password:</label>
-                    <input type="password" name="password" id="password" class="form-control" value="{{$user->password}}"><br>
-                    <label for="password">Confirm Password:</label>
-                    <input type="password" name="confirm" id="confirm" class="form-control"  value="{{$user->password}}"><br>
                     <label for="role">Role:</label>
-                    <input type="text" name="role" class="form-control" value="{{$user->role}}">
-                    <br>
+                    <select name="role" id="" class="form-control">
+                        <option value="">Administrator</option>
+                        <option value="">User</option>
+                    </select><br>
                     <button type="submit" class="btn btn-primary">Update</button>
                     {{-- <a href="/user/delete/{{$user->id}}" class="btn btn-warning" onclick="confirmDelete({{$user->id}})" role="button">Delete</a> --}}
                     <input type="button" class="btn btn-cancel" value="Cancel">

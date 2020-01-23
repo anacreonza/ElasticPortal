@@ -4,19 +4,28 @@
 
     use \App\Http\Controllers\SearchController;
     
-    $current_type = [
-        "image"
-    ]; 
+    $doctypes = Config::get('meta_mappings.doc_types');
+
+    $selected_type = "Images";
+
+    $types = $doctypes[$selected_type];
+
     $current_page = $page;
 
     $terms = Session::get('terms');
-    $terms['type'] = $current_type;
+    $terms['type'] = $selected_type;
 
-    $output = Session::get('output');
     $hits_count = Session::get('item_counts');
     $total_items = $hits_count['images'];
     $page_offset = $page - 1;
     $terms['from'] = $terms['size'] * $page_offset + 1;
+    if($terms['from'] >= $total_items){
+        $terms['from'] = $total_items;
+    }
+
+    // Remove aggregation terms from query
+    $terms['aggs'] = Null;
+    Session::put('terms', $terms);
 
     $results = SearchController::run_search($terms);
 

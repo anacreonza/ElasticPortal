@@ -4,15 +4,17 @@
 
     use \App\Http\Controllers\SearchController;
     
-    $current_type = [
-        "eom.story"
-    ];
+    $doctypes = Config::get('meta_mappings.doc_types');
+
+    $selected_type = "Articles";
+
+    $types = $doctypes[$selected_type];
+
     $current_page = $page;
 
     $terms = Session::get('terms');
-    $terms['type'] = $current_type;
+    $terms['type'] = $selected_type;
     
-    $output = Session::get('output');
     $hits_count = Session::get('item_counts');
     $total_items = $hits_count['stories'];
     $page_offset = $page - 1;

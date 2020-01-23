@@ -9,8 +9,9 @@
     $categories = $data['categories'];
     $types = $data['types'];
     $authors = $data['authors'];
-    $selected_type = Session::get('type');
+    $selected_type = Session::get('selected_type');
     $selected_pub = Session::get('selected_pub');
+    $selected_category = Session::get('selected_category');
     $selected_sorting = Session::get('sorting');
     $selected_maxresults = Session::get('maxresults');
     $selected_maxperpage = Session::get('maxperpage');
@@ -148,7 +149,11 @@
                                 <label for="category">Category:</label>
                                 <select name="category" id="category" class="form-control">
                                     @foreach ($categories as $category)
-                                        <option value={{$category}}>{{$category}}</option>
+                                        <option value={{$category}}
+                                        @if ($category == $selected_category)
+                                            selected
+                                        @endif
+                                        >{{$category}}</option>
                                     @endforeach
                                 </select>
                             </div>

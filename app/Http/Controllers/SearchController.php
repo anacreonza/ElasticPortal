@@ -265,42 +265,48 @@ class SearchController extends Controller
 
     public function get_types(){
         
-        $cached_types = Session::get('types');
+        // $cached_types = Session::get('types');
 
-        if (isset($cached_types)){
-            return $cached_types;
-        } elseif (isset($_COOKIES['Types'])){
-            $doctypes_json = $_COOKIE['Types'];
-            $doctype_list = \json_decode($doctypes_json);
-            return $doctype_list;
-        }
-        $params = [
-            'body' => [
-                'aggs' => [
-                    'document_types' => [
-                        'terms' => [
-                            'field' => 'ATTRIBUTES.METADATA.GENERAL.DOCTYPE.exact',
-                            'size' => 20
-                        ]
-                    ]
-                ]
-            ]
-        ];
-        $doctypes = $this->elasticsearch->search($params);
-        $types = $doctypes['aggregations']['document_types']['buckets'];
-        $doctype_list[] = 'All';
-        foreach ($types as $type){
-            $typename = $type['key'];
-            $typename = trim($typename);
-            $typename = \strtolower($typename);
-            if (!\in_array($typename, $doctype_list)){
-                $doctype_list[] = $typename;
-            }
-        }
-        $doctypes_json = \json_encode($doctype_list);
-        Session::put('types', $doctype_list);
+        // if (isset($cached_types)){
+        //     return $cached_types;
+        // } elseif (isset($_COOKIES['Types'])){
+        //     $doctypes_json = $_COOKIE['Types'];
+        //     $doctype_list = \json_decode($doctypes_json);
+        //     return $doctype_list;
+        // }
+
+        // $doc_type_key = Config::get('meta_mappings', 'doctype_exact');
+        // $params = [
+        //     'body' => [
+        //         'aggs' => [
+        //             'document_types' => [
+        //                 'terms' => [
+        //                     'field' => $doc_type_key,
+        //                     'size' => 20
+        //                 ]
+        //             ]
+        //         ]
+        //     ]
+        // ];
+        // $doctypes = $this->elasticsearch->search($params);
+        // $types = $doctypes['aggregations']['document_types']['buckets'];
+        // $doctype_list[] = 'All';
+        // foreach ($types as $type){
+        //     $typename = $type['key'];
+        //     $typename = trim($typename);
+        //     $typename = \strtolower($typename);
+        //     if (!\in_array($typename, $doctype_list)){
+        //         $doctype_list[] = $typename;
+        //     }
+        // }
+
+        // Retrieve document types array from config. Use a static list because the types don't change that much.
+        $doctype_array = Config::get("meta_mappings.doc_types");
+        $doctype_keys = array_keys($doctype_array);
+        $doctypes_json = \json_encode($doctype_keys);
+        Session::put('types', $doctype_keys);
         setcookie('Types', $doctypes_json, time()+(3600*12));
-        return $doctype_list;
+        return $doctype_keys;
     }
 
     public function get_publications(){
@@ -508,6 +514,10 @@ class SearchController extends Controller
         # Put the query into the session:
         Session::put('query_string', $query);
 
+        $query_string_json = \json_encode($query);
+
+        // die(SearchController::var_dump2($query_string_json));
+
         # Build URL for Elastic server from config
         $server_address = Config::get('elastic.server.ip');
         $server_port = Config::get('elastic.server.port');
@@ -550,8 +560,6 @@ class SearchController extends Controller
         $meta_keys = Config::get('meta_mappings.keys');
         $filters = [];
 
-        #die(SearchController::var_dump2($terms['text']));
-
         $text_terms = $terms['text'];
 
         $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
@@ -562,10 +570,19 @@ class SearchController extends Controller
         }
         $all_terms_string = \substr($all_terms_string, 5);
 
-        if(isset($terms['type'])){
+        if ($terms['type'] != 'All'){
+
+            if ($terms['type'] == "Articles"){
+                $selected_types = Config::get('meta_mappings.doc_types.Articles');
+            } elseif ($terms['type'] == "Images"){
+                $selected_types = Config::get('meta_mappings.doc_types.Images');
+            } else {
+                $selected_types = Config::get('meta_mappings.doc_types.Other Documents');
+            }
+ 
             $type_filter = [
                 'terms' => [ // Use terms rather than term - so we can use an array of terms.
-                    $meta_keys['objecttype'] => $terms['type'] //OBJECTINFO.TYPE is more general than DOCTYPE.exact
+                    $meta_keys['doctype'] => $selected_types
                 ]
             ];
             $filters[] = $type_filter;
@@ -578,6 +595,15 @@ class SearchController extends Controller
                 ]
             ];
             $filters[] = $pub_filter;
+        }
+
+        if ($terms['category'] != 'All'){
+            $category_filter = [
+                'term' => [
+                    $meta_keys['category'] => $terms['category']
+                ]
+            ];
+            $filters[] = $category_filter;
         }
 
         if (isset($terms['from'])){
@@ -687,8 +713,6 @@ class SearchController extends Controller
 
         $json_query = json_encode($query, JSON_PRETTY_PRINT);
 
-        // die(SearchController::var_dump2($json_query));
-
         return $query;
     }
 
@@ -698,7 +722,6 @@ class SearchController extends Controller
 
         $terms = array();
         $terms['index'] = $_GET['archive'];
-        $selected_type = $_GET['type'];
         $terms['text'] = $_GET['text'];
         $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
         $terms['publication'] = $_GET['publication'];
@@ -708,7 +731,8 @@ class SearchController extends Controller
         $terms['size'] = $_GET['size'];
         $terms['author'] = $_GET['author'];
         $terms['match'] = $_GET['match'];
-        $terms['categories'] = $_GET['category'];
+        $terms['category'] = $_GET['category'];
+        $terms['type'] = $_GET['type'];
 
         # Validate them
         
@@ -739,7 +763,6 @@ class SearchController extends Controller
                 ]
             ]
         ];
-
         $results = SearchController::run_search($terms);
 
         #die(SearchController::var_dump2($results));
@@ -749,7 +772,18 @@ class SearchController extends Controller
 
         $doctype_counts = $this->classify_results($results);
 
-        #Session::put('maxperpage', $terms['show-amount']);
+        if ($terms['publication'] != 'All') {
+            Session::put('selected_pub', $terms['publication']);
+        } else {
+            Session::put('selected_pub', '');
+        }
+
+        if ($terms['category'] != 'All'){
+            Session::put('selected_category', $terms['category']);
+        } else {
+            Session::put('selected_category', '');
+        }
+
         if ($terms['startdate'] != '1970-01-01'){
             Session::put('selected_startdate', $terms['startdate']);
         } else {
@@ -759,6 +793,12 @@ class SearchController extends Controller
             Session::put('selected_enddate', $terms['enddate']);
         } else {
             Session::put('selected_enddate', '');
+        }
+
+        if ($terms['type'] != 'All'){
+            Session::put('selected_type' , $terms['type']);
+        } else {
+            Session::put('selected_type', '');
         }
 
         if ($doctype_counts['stories'] > 0){

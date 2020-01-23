@@ -37,7 +37,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function roles(){
-        return $this->belongsToMany(Role::class, 'user_role');
+    public function role(){
+        return $this->belongsTo('App\Role');
     }
 }
