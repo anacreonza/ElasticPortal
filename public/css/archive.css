@@ -138,6 +138,12 @@ p {
 
     /* width: 100%; */
 }
+/* Search form styles */
+
+input::placeholder {
+    font-size: 0.7em;
+}
+
 /* Metadata stuff */
 
 .meta-list {

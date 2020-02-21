@@ -61,11 +61,6 @@
                     {{$item['filename']}}
                     <span class="view-link"><a href="http://152.111.25.125:4700{{$item['path']}}">View</a></span>
                 </div>
-                <div class="card-body">
-                    @if (isset($item['preview']))
-                    <div class="text-preview">{!!$item['preview']!!}</div>                        
-                    @endif
-                </div>
                 <div class="card-footer">
                     <div class="meta-footer">
                         <div><span class="item-label">LOID: </span>{{$item['loid']}}</div>

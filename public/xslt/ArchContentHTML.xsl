@@ -114,7 +114,7 @@
 
 	<!-- Convert the fg-photo tag into an img-->
 	<xsl:template match="fg-photo">
-		<a href="http://152.111.25.125:4700{@fileref}"><img class="fg-photo" src="http://152.111.25.125:4700{@fileref}" width="420px" alt="Image"></img></a>
+		<div class="story-image"><a href="http://152.111.25.125:4700{@fileref}"><img class="fg-photo" src="http://152.111.25.125:4700{@fileref}&amp;f=image_lowres" width="590px" alt="Image"></img></a></div>
 	</xsl:template>
 
 	<!-- Convert the photo-caption tag -->

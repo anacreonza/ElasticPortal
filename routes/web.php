@@ -25,11 +25,13 @@ Route::get('/index', function () {
     return view('welcome');
 });
 
-Route::get('/', 'SearchController@advanced_search_form');
+Route::get('/', 'SearchController@advanced_search_form')->name('root');
 
-Route::get('/do_advanced_search', 'SearchController@do_advanced_search');
+Route::get('/do_advanced_search', 'SearchController@do_advanced_search')->name('advanced_search');
 
 Route::get('/search_all', 'SearchController@search_all');
+
+Route::get('/search', 'SearchController@basic_search');
 
 Route::prefix('/results')->group(function(){
     Route::get('images/{page}', function($page){
@@ -81,6 +83,9 @@ Route::get('/user/delete/{id}', 'UserController@destroy')->middleware('auth');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/adminhome', function(){
+    return view('adminhome');
+});
 
 Route::get('/changelog', function(){
     return view('admin/changelog');

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
@@ -15,6 +16,12 @@ class RoleMiddleware
      */
     public function handle($request, Closure $next)
     {
+        $user = Auth::user();
+
+        if ($user->role_id == "1"){
+            return redirect("/adminhome");
+        }
+        
         return $next($request);
     }
 }

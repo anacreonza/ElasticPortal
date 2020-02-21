@@ -26,7 +26,27 @@ if (!isset($searched_terms["index"])){
 if (!isset($searched_terms["publication"])){
     $searched_terms["publication"] = "All";
 }
-
+if (!isset($searched_terms["text"])){
+    $searched_terms['text'] = '';
+}
+if (!isset($searched_terms["sort-by"])){
+    $searched_terms["sort-by"] = '';
+}
+if (!isset($searched_terms["startdate"])){
+    $searched_terms["startdate"] = '';
+}
+if (!isset($searched_terms["enddate"])){
+    $searched_terms["enddate"] = '';
+}
+if (!isset($searched_terms["category"])){
+    $searched_terms["category"] = '';
+}
+if (!isset($searched_terms["author"])){
+    $searched_terms["author"] = '';
+}
+if (!isset($searched_terms["match"])){
+    $searched_terms["match"] = '';
+}
 ?>
 
 <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
@@ -39,7 +59,7 @@ if (!isset($searched_terms["publication"])){
             <form action="/do_advanced_search" method="GET" style="display: flex;">
                 <input class="search-field" style="height:36px; width:550px; font-size:14pt;" type="text" name="text" placeholder=" Search" autofocus value="{{$searched_terms['text']}}">
                 <button type="submit" class="search-button-mini"><i class="fa fa-search" aria-hidden="true"></i></button>
-                <input type="hidden" name="type" id="type" value="{{serialize($searched_terms["type"])}}">
+                <input type="hidden" name="type" id="type" value="All">
                 <input type="hidden" name="archive" id="archive" value="{{$searched_terms["index"]}}">
                 <input type="hidden" name="publication" id="publication" value="{{$searched_terms["publication"]}}">
                 <input type="hidden" name="sort-by" id="sort-by" value="{{$searched_terms["sort-by"]}}">
@@ -47,7 +67,7 @@ if (!isset($searched_terms["publication"])){
                 <input type="hidden" name="enddate" id="enddate" value="{{$searched_terms["enddate"]}}">
                 <input type="hidden" name="size" id="size" value="{{$user_prefs->results_per_page}}">
                 <input type="hidden" name="show-amount" id="show-amount" value="{{Session::get('total_hits')}}">
-                <input type="hidden" name="category" id="category" value="">
+                <input type="hidden" name="category" id="category" value="{{$searched_terms['category']}}">
                 <input type="hidden" name="author" id="author" value="{{$searched_terms["author"]}}">
                 <input type="hidden" name="match" id="match" value="{{$searched_terms["match"]}}">
             </form>

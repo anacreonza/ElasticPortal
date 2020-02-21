@@ -1,6 +1,10 @@
 @extends('results.results')
+@if (!session('terms'))
+    @php
+        return redirect('root')->with('errors', "Session expired!");
+    @endphp
+@endif
 <?php
-
 use \App\Http\Controllers\SearchController;
 
 $terms = Session::get('terms');

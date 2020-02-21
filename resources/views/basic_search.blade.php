@@ -33,7 +33,6 @@
         startDate: '-15y'
         });
     </script>
-    
 @endsection
 
 @section('navbar')
@@ -56,7 +55,7 @@
     <div class="container">
         {{-- <h1>Media24 Newspaper Archive Search</h1> --}}
         <div class="search-card">
-            <div class="card-header">Advanced Search</div>
+            <div class="card-header">Search</div>
             <div class="card-body">
                 <form action="/do_advanced_search" method="GET">
                     @csrf
@@ -162,7 +161,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="author">Author:*</label>
-                                <input type="text" name="author" id="author" class="form-control small-placeholder" autocomplete="off" value="" placeholder="Type Author Name...">
+                                <input type="text" name="author" id="author" class="form-control" autocomplete="off" value="">
                             </div>
                         </div>
                     </div>        

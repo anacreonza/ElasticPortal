@@ -5,6 +5,14 @@
 @section('content')
 <div class="container">
     <div class="items-container">
+        <p>21-Feb-2020:</p>
+        <ul>
+            <li>Included image links in articles. Low-resolution images are requested to keep loading times down.</li>  
+            <li>Started to implement the basics of authenticaiton system. Created links page for each user.</li>  
+            <li>Database migrations added to add place for future local preferences settings.</li>
+            <li>Fixed crash relating to last item in list not finding the next story for the pagination button.</li>
+            <li>Moved to Git-based deployment system to try to speed up future deployments.</li>
+        </ul>
         <p>9-Dec-2019:</p>
         <ul>
             <li>Lowered minimum score (to 10) for results to prevent common words from not appearing.</li>

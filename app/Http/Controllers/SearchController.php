@@ -716,6 +716,10 @@ class SearchController extends Controller
         return $query;
     }
 
+    public function basic_search(Request $request){
+        return view('basic_search');
+    }
+
     public function do_advanced_search(Request $request){
         
         # Get all the terms from the form
@@ -951,6 +955,10 @@ class SearchController extends Controller
         
         $metadata = $this->get_meta_one($loid);
 
+        if ($metadata == false){
+            die('Unable to retrieve metadata.');
+        }
+
         $image_data['loid'] = $loid;
         $image_data['index'] = $metadata['_index'];
         if (isset($metadata['_source']['SYSTEM']['ALERTPATH'])){
@@ -1031,12 +1039,16 @@ class SearchController extends Controller
 
     public function get_meta_one($loid){
         $query_string = Session::get('query_string');
+        if (!isset($query_string)){
+            return false;
+        }
         $index = $query_string['index'];
         $server_address = Config::get('elastic.server.ip');
         $server_port = Config::get('elastic.server.port');
         $type = "EOM::File";
         $item_url = "http://" . $server_address . ":" . $server_port . "/" . $index . "/" . $type  . "/" . $loid;
         $metadata_json = file_get_contents($item_url);
+
         $metadata = json_decode($metadata_json, JSON_PRETTY_PRINT);
         return $metadata;
     }
@@ -1047,11 +1059,19 @@ class SearchController extends Controller
     }
 
     public function show_imageviewer($loid){
+        $terms = Session::get('terms');
+        if (!isset($terms)){
+            return redirect('/')->withErrors('Unable to retrieve search terms, probably due to an expired session. Please run your search again.');
+        }
         $metadata = $this->prepare_image_meta($loid);
         return view('results.imageviewer')->with('metadata', $metadata);
     }
 
     public function show_storyviewer($loid){
+        $terms = Session::get('terms');
+        if (!isset($terms)){
+            return redirect('/')->withErrors('Unable to retrieve search terms, probably due to an expired session. Please run your search again.');
+        }
         $story = $this->prepare_story_data($loid);
         return view('results.storyviewer')->with('story', $story);
     }
