@@ -26,8 +26,16 @@
                         <tr>
                             <td>{{$user->name}}</td>
                             <td>{{$user->email}}</td>
-                            <td>{{$user->created_at->diffForHumans()}}</td>
-                            <td>{{$user->updated_at->diffForHumans()}}</td>
+                            @if ($user->created_at)
+                                <td>{{$user->created_at->diffForHumans()}}</td>
+                            @else
+                                <td>No creation date available.</td>
+                            @endif
+                            @if ($user->updated_at)
+                                <td>{{$user->updated_at->diffForHumans()}}</td>
+                            @else
+                                <td>No modification date available.</td>
+                            @endif
                             <td><a href="/user/edit/{{$user->id}}"><i class="fas fa-edit"></i></a></td>
                         </tr>
                     @endforeach

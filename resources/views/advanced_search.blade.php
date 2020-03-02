@@ -23,6 +23,7 @@
     }
     $selected_startdate = Session::get('selected_startdate');
     $selected_enddate = Session::get('selected_enddate');
+
 ?>
 @extends('layouts.app')
 @section('header')
@@ -207,8 +208,9 @@
             <div class="card-footer">
                 <p>* Not implemented yet</p>
                 <p>Please note this site is still experimental and may be unstable.</p>
-                <p>Last updated 9-Dec-2019 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
-                <a href="/changelog">Change Log</a>
+                <p>Last updated 21-Feb-2020 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p><a href="https://teams.microsoft.com/l/channel/19%3a36587d4bf8b04cb59fa68cb1364dc80e%40thread.skype/General?groupId=d7bac466-3ddd-4d7b-b0df-5a4c1d477e8a&tenantId=01ea1ee8-0c15-4160-9922-f383f39a19be" target="_blank">Archive Site Teams Group</a></p>
+                <p><a href="/changelog">Change Log</a></p>
             </div>
         </div>
  </div>

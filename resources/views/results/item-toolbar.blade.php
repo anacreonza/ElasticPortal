@@ -1,5 +1,5 @@
 <div class="item-toolbar">
-    <a href="{{$url}}" target="_blank"><i class="fa fa-download" aria-hidden="true"></a></i>
+    <a href="{{$url}}" target="_blank" download><i class="fa fa-download" aria-hidden="true"></a></i>
     <span class="pager-buttons btn-group">
         @if ($type == 'article')
             @if (isset($surrounding_loids['previous']))

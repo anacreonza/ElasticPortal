@@ -34,7 +34,7 @@ $surrounding_loids = SearchController::get_next_and_previous_loid($metadata['loi
     @endcomponent
     <div class="item-background">
         <div class="content-preview">
-            <img src="{{$image_url}}" alt="" class="image-big-preview">
+            <img src="{{$image_url}}?f=image_lowres" alt="" class="image-big-preview">
         </div>
         <div>
             @component('results.item-toolbar', ['type' => 'image', 'url' => $image_url, 'surrounding_loids' => $surrounding_loids])         

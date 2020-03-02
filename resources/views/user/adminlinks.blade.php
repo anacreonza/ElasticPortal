@@ -68,6 +68,14 @@
         </a>
     </div>
     <div class="control-panel-item">
+        <a href="/healthcheck">
+            <div class="icon-block">
+                <i class="fas fa-heartbeat big-icons"></i>
+            </div>
+            <div class="item-description">Health Check</div>
+        </a>
+    </div>
+    <div class="control-panel-item">
         <a href="/clear_cookies">
             <div class="icon-block">
                 <i class="fa fa-eraser big-icons"></i>

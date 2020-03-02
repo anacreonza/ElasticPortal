@@ -104,3 +104,7 @@ Route::get('/clear_cookies', function(){
     CookieController::clear_cookies();
     return redirect('/');
 });
+
+Route::get('/healthcheck', function(){
+    return view('/admin/healthcheck');
+});

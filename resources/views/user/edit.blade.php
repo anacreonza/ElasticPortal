@@ -18,9 +18,19 @@
     @endcomponent
 @endsection
 
+@if ($errors->any())
+<div class="alert alert-danger">
+    <ul>
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 @section('content')
 <div class="container">
-    <div class="linkbar"><a href="/home">Back to user home page</a></div>
+    <div class="linkbar"><a href="/users">Back to users</a></div>
     
     <div class="story-background">
         <div class="card">
@@ -33,14 +43,23 @@
                     <label for="email">Email:</label>
                     <input type="email" name="email" id="email" class="form-control" value="{{$user->email}}"><br>
                     <label for="role">Role:</label>
-                    <select name="role" id="" class="form-control">
-                        <option value="">Administrator</option>
-                        <option value="">User</option>
+                    <select name="role_id" id="role_id" class="form-control">
+                        <option value="1"
+                        @if ($user->role_id == "1")
+                            selected
+                        @endif
+                        >Administrator</option>
+
+                        <option value="2"
+                        @if ($user->role_id == "2")
+                            selected
+                        @endif
+                        >User</option>
                     </select><br>
-                    <button type="submit" class="btn btn-primary">Update</button>
-                    {{-- <a href="/user/delete/{{$user->id}}" class="btn btn-warning" onclick="confirmDelete({{$user->id}})" role="button">Delete</a> --}}
-                    <input type="button" class="btn btn-cancel" value="Cancel">
-                    <input type="button" class="btn btn-warning" onclick="confirmDelete({{$user->id}})" value="Delete">
+                    <input type="submit" class="btn btn-primary" value="Update">
+                </form>
+                <form action="/user/delete/{{$user->id}}">
+                    <input type="submit" class="btn btn-warning" onclick="confirmDelete({{$user->id}})" value="Delete">
                 </form>
             </div>
         </div>
