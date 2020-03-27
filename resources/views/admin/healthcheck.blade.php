@@ -26,14 +26,14 @@
                     <tr><th>Item</th><th>Status</th></tr>
                     <tr><td>.env file</td><td>
                         @if ($env_status)
-                            OK
+                            <span class="ok-block">OK</span>
                         @else
                             <span class="error-block">.env file not found</span>
                         @endif
                     </tr>
                     <tr><td>Database Connection</td><td>
                         @if ($db_status)
-                            Database connected
+                            <span class="ok-block">Database connected</span>
                         @else
                             <span class="error-block">No database connection found.</span>
                         @endif

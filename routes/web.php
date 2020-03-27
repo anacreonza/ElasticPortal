@@ -108,3 +108,6 @@ Route::get('/clear_cookies', function(){
 Route::get('/healthcheck', function(){
     return view('/admin/healthcheck');
 });
+Route::get('/querybuilder', function(){
+    return view('/admin/querybuilder');
+});

@@ -27,12 +27,24 @@ class SearchController extends Controller
         $hosts = [
             $server_address . ":" . $server_port
         ];
+        $this->site_check($server_address, $server_port);
         $this->elasticsearch = ClientBuilder::create()->setHosts($hosts)->build();
         # Need to use this $elasticsearch object's methods like get().
         $this->meta_keys = Config::get('meta_mappings.keys');
         CookieController::initialise_cookie();
     }
-    
+    public function site_check($ip, $port){
+        //Check if Elastic site is responding.
+        $timeout_secs = 30;
+        if($socket =@ fsockopen($ip, $port, $errno, $errstr, $timeout_secs)) {
+            fclose($socket);
+            return;
+        } else {
+            $errorstring = "Error: $errno - $errstr. Elastic server at $ip:$port failed to respond within the timeout limit ($timeout_secs seconds). Please check server address settings in config/elastic.php.";
+            die($errorstring);
+        }
+    }
+
     public static function prepare_results(){
 
         //Pick out the pieces fo the results that we need.
@@ -225,7 +237,6 @@ class SearchController extends Controller
         // Try to get the indices from the session or a cookie before falling back on doing the slow aggs search.
 
         $cached_indices = Session::get('indices');
-    
         if (isset($cached_indices)){
             $indices_array = $cached_indices;
             return $indices_array;
@@ -549,6 +560,10 @@ class SearchController extends Controller
 
         $user_agent = \request()->server('HTTP_USER_AGENT');
 
+        if (!isset($terms['text'])){
+            $terms['text'] = "No text search (all files).";
+        }
+
         $message = "Username: " . $username . ", IP: " . $user_ip . ", UserAgent: " . $user_agent . ", Index: " . $terms['index'] . ", Text: " . $terms['text'];
         Log::info($message);
     }
@@ -556,62 +571,246 @@ class SearchController extends Controller
     public static function build_query($terms){
 
         # Build up query from form terms
-
         $meta_keys = Config::get('meta_mappings.keys');
         $filters = [];
 
-        $text_terms = $terms['text'];
+        // If no special criteria are selected then do a match all query. Otherwise select one of the criteria as a must clause and the rest as filter clauses.
 
-        $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
-        $termcount = count($text_terms_array);
-        $all_terms_string = "";
-        foreach ($text_terms_array as $term) {
-            $all_terms_string .= " AND " . $term;
-        }
-        $all_terms_string = \substr($all_terms_string, 5);
-
-        if ($terms['type'] != 'All'){
-
-            if ($terms['type'] == "Articles"){
-                $selected_types = Config::get('meta_mappings.doc_types.Articles');
-            } elseif ($terms['type'] == "Images"){
-                $selected_types = Config::get('meta_mappings.doc_types.Images');
-            } else {
-                $selected_types = Config::get('meta_mappings.doc_types.Other Documents');
+        // Converted all searches to multi_match as it's better than just simple query_string. Need to add the fields for images to the fields list however.
+        # Build query clause
+        function build_query_clause($terms){
+            // Cater for when user does not narrow search down at all.
+            if ( $terms['match'] == 'alldocs' && 
+                $terms['type'] == 'All' && 
+                $terms['publication'] == 'All' && 
+                $terms['category'] == 'All' && 
+                ($terms['startdate'] == '' || $terms['enddate'] == ''))
+                {
+                $query_clause = [ 'match_all' => new \stdClass() ];
+                return $query_clause;
             }
- 
-            $type_filter = [
-                'terms' => [ // Use terms rather than term - so we can use an array of terms.
-                    $meta_keys['doctype'] => $selected_types
-                ]
-            ];
-            $filters[] = $type_filter;
-        }
- 
-        if ($terms['publication'] != 'All'){
-            $pub_filter = [
-                'term' => [
-                    $meta_keys['product'] => $terms['publication']
-                ]
-            ];
-            $filters[] = $pub_filter;
-        }
+            function prepare_allwords_text_string($terms){
+                $text_terms = $terms['text'];
+                $text_terms_array = \preg_split("/[\s,]+/", $terms['text']);
+                $termcount = count($text_terms_array);
+                $all_terms_string = "";
+                foreach ($text_terms_array as $term) {
+                    $all_terms_string .= " AND " . $term;
+                }
+                $all_terms_string = \substr($all_terms_string, 5);
+                return $all_terms_string;
+            }
+            function build_allwords_query_clause($terms){
+                // Need to add fields for image search to multi-match
+                $query_clause = [
+                    'bool' => [
+                        'must' => [
+                            'multi_match' => [
+                                'query' => prepare_allwords_text_string($terms),
+                                'fuzziness' => 0,
+                                'type' => 'best_fields',
+                                'fields' => [
+                                    'CONTENT.*',
+                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
+                                ]
+                            ]
+                        ],
+                        'filter' => [
+                            build_filter_clause($terms)
+                        ]                            
+                    ]
+                ];
+                return $query_clause;
+            }
+            function build_phrase_query_clause($terms){
+                $query_clause = [
+                    'bool' => [
+                        'must' => [
+                            'multi_match' => [
+                                'query' => $terms['text'],
+                                'type' => 'phrase',
+                                'fields' => [
+                                    'CONTENT.*',
+                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
+                                ]
+                            ]
+                        ],
+                        'filter' => [
+                            build_filter_clause($terms)
+                        ]
+                    ]
+                ];
+                return $query_clause;
+            }
+            function build_anytext_query_clause($terms){
+                $query_clause = [
+                    'bool' => [
+                        'must' => [
+                            'multi_match' => [
+                                'query' => $terms['text'],
+                                'fuzziness' => 'AUTO',
+                                'type' => 'best_fields',
+                                'fields' => [
+                                    'CONTENT.*',
+                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
+                                ]
+                            ]
+                        ],
+                        'filter' => [
+                            build_filter_clause($terms)
+                        ]
+                    ]
+                ];
+                return $query_clause;
+            }
+            function build_alldocs_query_clause($terms){
+                // In an alldocs search you can just add each criterion to its own match clause.
+                // need to cater for each filter individually
+                $meta_keys = Config::get('meta_mappings.keys');
 
-        if ($terms['category'] != 'All'){
-            $category_filter = [
-                'term' => [
-                    $meta_keys['category'] => $terms['category']
-                ]
-            ];
-            $filters[] = $category_filter;
-        }
+                $query_clause = [];
+                // Type filter
+                if($terms['type'] != 'All'){
+                    $key = $meta_keys['doctype'];
+                    $value = $terms['type'];
+                    $query_clause['bool']['must'][] = [
+                        'match' => [
+                            $key => $value
+                        ]
+                    ];
+                }
+                // Publication filter
+                if($terms['publication'] != 'All'){
+                    $key = $meta_keys['product'];
+                    $value = $terms['publication'];
+                    $query_clause['bool']['must'][] = [
+                        'match' => [
+                            $key => $value
+                        ]
+                    ];
+                }
+                // Category filter
+                if($terms['category'] != 'All'){
+                    $key = $meta_keys['category'];
+                    $value = $terms['category'];
+                    $query_clause['bool']['must'][] = [
+                        'match' => [
+                            $key => $value
+                        ]
+                    ];
+                }
+                // Date filter
+                if ($terms['startdate'] != '' || $terms['enddate'] != ''){
+                    if ($terms['startdate'] == ''){
+                        $terms['startdate'] = '1970-01-01';
+                    }
+                    if ($terms['enddate'] == ''){
+                        $terms['enddate'] = 'now';
+                    }
+                    $query_clause['bool']['must'][] = [
+                        'range' => [
+                            $meta_keys['issuedate'] => [
+                                'gte' => $terms['startdate'],
+                                'lte' => $terms['enddate']
+                            ]
+                        ]
+                    ];
+                }
 
+                // die(SearchController::var_dump2($query_clause));
+                return $query_clause;
+            }
+            # High level logic:
+            switch ($terms['match']) {
+            case 'allwords':
+                $query_clause = build_allwords_query_clause($terms);
+                break;
+            
+            case 'phrase':
+                $query_clause = build_phrase_query_clause($terms);
+                break;
+            
+            case 'any':
+                $query_clause = build_anytext_query_clause($terms);
+                break;
+            
+            case 'alldocs':
+                $query_clause = build_alldocs_query_clause($terms);
+                break;
+            
+            default:
+                die("Unknown match option");
+                break;
+            }
+            #$query_clause = null;
+            return $query_clause;
+        }
+        function build_filter_clause($terms){
+            $meta_keys = Config::get('meta_mappings.keys');
+            if ($terms['type'] != 'All'){
+                if ($terms['type'] == "Articles"){
+                    $selected_types = Config::get('meta_mappings.doc_types.Articles');
+                } elseif ($terms['type'] == "Images"){
+                    $selected_types = Config::get('meta_mappings.doc_types.Images');
+                } else {
+                    $selected_types = Config::get('meta_mappings.doc_types.Other Documents');
+                }
+     
+                $type_filter = [
+                    'terms' => [ // Use terms rather than term - so we can use an array of terms.
+                        $meta_keys['doctype'] => $selected_types
+                    ]
+                ];
+                $filter_clause[] = $type_filter;
+            }
+     
+            if ($terms['publication'] != 'All'){
+                $pub_filter = [
+                    'term' => [
+                        $meta_keys['product'] => $terms['publication']
+                    ]
+                ];
+                $filter_clause[] = $pub_filter;
+            }
+    
+            if ($terms['category'] != 'All'){
+                $category_filter = [
+                    'term' => [
+                        $meta_keys['category'] => $terms['category']
+                    ]
+                ];
+                $filter_clause[] = $category_filter;
+            }
+    
+            if ($terms['startdate'] != '' || $terms['enddate'] != ''){
+                if ($terms['startdate'] == ''){
+                    $terms['startdate'] = '1970-01-01';
+                }
+                if ($terms['enddate'] == ''){
+                    $terms['enddate'] = 'now';
+                }
+                $date_range_filter = [
+                    'range' => [
+                        $meta_keys['issuedate'] => [
+                            'gte' => $terms['startdate'],
+                            'lte' => $terms['enddate']
+                        ]
+                    ]
+                ];
+                $filter_clause[] = $date_range_filter;
+            } else {
+                $date_range_filter = '';
+            }
+            return $filter_clause;
+        }
+        // Pagination stuff
         if (isset($terms['from'])){
             $from = $terms['from'];
         } else {
             $from = 0;
         }
 
+        // Sorting order
         switch ($terms['sort-by']) {
             case 'date':
                 $sort_string = 'OBJECTINFO.CREATED';
@@ -631,63 +830,12 @@ class SearchController extends Controller
                 break;
         }
 
-        if ($terms['startdate'] != '' || $terms['enddate'] != ''){
-            if ($terms['startdate'] == ''){
-                $terms['startdate'] = '1970-01-01';
-            }
-            if ($terms['enddate'] == ''){
-                $terms['enddate'] = 'now';
-            }
-            $date_range_filter = [
-                'range' => [
-                    $meta_keys['issuedate'] => [
-                        'gte' => $terms['startdate'],
-                        'lte' => $terms['enddate']
-                    ]
-                ]
-            ];
-            $filters[] = $date_range_filter;
-        } else {
-            $date_range_filter = '';
-        }
-
-        if ($terms['match'] == 'phrase'){
-            $textquery = [
-                'multi_match' => [ 
-                    "query" => $terms['text'],
-                    "type" => "phrase",
-                    "fields" => $meta_keys['textsearch_fields']
-                    ]
-                ];
-        } elseif($terms['match'] == 'allwords'){
-            $textquery = [
-                'query_string' => [
-                    'query' => $all_terms_string,
-                    'fuzziness' => 0
-                    #'minimum_should_match' => $termcount
-                ]
-            ];
-        } else {
-            $textquery = [
-                'query_string' => [
-                    'query' => $terms['text'],
-                    'fuzziness' => 'AUTO'
-                ]
-            ];
-        }
-
+        // Build up the final query object
         $query = [
             'index' => $terms['index'],
             'from' => $from,
             'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            $textquery
-                        ],
-                        'filter' => $filters
-                    ]
-                ],
+                'query' => build_query_clause($terms),
                 // 'size' => $resultsamount,
                 'sort' => [
                     $sort_string => $sort_order
@@ -701,7 +849,7 @@ class SearchController extends Controller
                     'fragment_size' => 200
                 ],
                 'size' => $terms['size'],
-                'min_score' => 10
+                // 'min_score' => 10
             ]
         ];
 
@@ -712,10 +860,9 @@ class SearchController extends Controller
         Session::put('query_string', $query);
 
         $json_query = json_encode($query, JSON_PRETTY_PRINT);
-
+        // die(SearchController::var_dump2($json_query));
         return $query;
     }
-
     public function basic_search(Request $request){
         return view('basic_search');
     }
@@ -725,24 +872,28 @@ class SearchController extends Controller
         # Get all the terms from the form
 
         $terms = array();
+        $terms['match'] = $_GET['match'];
+        if ($terms['match'] != 'alldocs'){
+            $terms['text'] = $_GET['text'];
+            $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
+        }
         $terms['index'] = $_GET['archive'];
-        $terms['text'] = $_GET['text'];
-        $terms['text'] = trim($terms['text']); //Remove whitespace to prevent crashes when doing all words search.
         $terms['publication'] = $_GET['publication'];
         $terms['sort-by'] = $_GET['sort-by'];
         $terms['startdate'] = $_GET['startdate'];
         $terms['enddate'] = $_GET['enddate'];
         $terms['size'] = $_GET['size'];
         $terms['author'] = $_GET['author'];
-        $terms['match'] = $_GET['match'];
         $terms['category'] = $_GET['category'];
         $terms['type'] = $_GET['type'];
 
         # Validate them
         
-        $request->validate([
-            'text' => 'required'
-        ]);
+        if ($terms['match'] != 'alldocs'){
+            $request->validate([
+                'text' => 'required'
+            ]);
+        }
 
         if ($terms['enddate'] != ''){
             $validated_data = $request->validate([

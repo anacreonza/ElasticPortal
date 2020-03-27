@@ -11,7 +11,7 @@
 @endsection
 @section('content')
     <div class="container">
-        <div class="linkbar"><a href="/home">Back to my home page</a></div>
+        <div class="linkbar"><a href="/home">Back to Admin page</a></div>
         <div class="card">
             <div class="card-header">Registered Users</div>
             <div class="card-body">

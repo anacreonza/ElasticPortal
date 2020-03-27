@@ -28,13 +28,7 @@
 @extends('layouts.app')
 @section('header')
     <title>Archive | Search</title>
-    <script>
-        $('.datepicker').datepicker({
-        format: 'yyy-mm-dd',
-        startDate: '-15y'
-        });
-    </script>
-    
+    <script src="js/adaptiveForm.js"></script>
 @endsection
 
 @section('navbar')
@@ -64,20 +58,26 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <div class="form-group">
-                                <input style="height:45px" type="text" name="text" id="text" class="form-control search-form" autocomplete="off" autofocus value="{{$terms['text']}}"><br>
+                                <input style="height:45px" type="text" name="text" id="textInput" class="form-control search-form" autocomplete="off" autofocus value="@if (isset($terms['text'])) {{$terms['text']}} @endif" @if ($selected_match_option == 'alldocs') disabled @endif>
+                                <br>
                                 <div class="form-check-inline">
                                     <label class="form-check-label">
-                                    <input type="radio" class="form-check-input"  name="match" value="allwords" @if ($selected_match_option == 'allwords')checked @endif>Match Exact Words
+                                    <input type="radio" class="form-check-input"  name="match" id="matchExactWords" value="allwords" @if ($selected_match_option == 'allwords')checked @endif>Match Exact Words
                                     </label>
                                 </div>
                                 <div class="form-check-inline">
                                     <label class="form-check-label">
-                                    <input type="radio" class="form-check-input"  name="match" value="phrase" @if ($selected_match_option == 'phrase')checked @endif>Match Exact Phrase
+                                    <input type="radio" class="form-check-input"  name="match" id="matchExactPhrase" value="phrase" @if ($selected_match_option == 'phrase')checked @endif>Match Exact Phrase
                                     </label>
                                 </div>
                                 <div class="form-check-inline">
                                     <label class="form-check-label">
-                                    <input type="radio" class="form-check-input"  name="match" value="any" @if ($selected_match_option == 'any')checked @endif>Match Any Text
+                                    <input type="radio" class="form-check-input"  name="match" id="matchAnyText" value="any" @if ($selected_match_option == 'any')checked @endif>Match Any Text
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="form-check-label">
+                                    <input type="radio" class="form-check-input"  name="match" value="alldocs" id="disableTextSearch" @if ($selected_match_option == 'alldocs')checked @endif>Match all documents (disable text search)
                                     </label>
                                 </div>
                             </div>
@@ -136,12 +136,8 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
-                                <label for="sort-by">Sort By:</label>
-                                <select name="sort-by" id="sort=by" class="form-control">
-                                    <option value="date">Date (show newest items first)</option>
-                                    <option value="score" selected>Score (show most relevant items first)</option>
-                                    <option value="size">Size (show biggest items first)</option>
-                                </select>
+                                <label for="author">Author:*</label>
+                                <input type="text" name="author" id="author" class="form-control small-placeholder" autocomplete="off" value="" placeholder="Type Author Name...">
                             </div>
                         </div>
                     </div>
@@ -162,8 +158,12 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
-                                <label for="author">Author:*</label>
-                                <input type="text" name="author" id="author" class="form-control small-placeholder" autocomplete="off" value="" placeholder="Type Author Name...">
+                                <label for="sort-by">Sort By:</label>
+                                <select name="sort-by" id="sort=by" class="form-control">
+                                    <option value="date">Date (show newest items first)</option>
+                                    <option value="score" selected>Score (show most relevant items first)</option>
+                                    <option value="size">Size (show biggest items first)</option>
+                                </select>
                             </div>
                         </div>
                     </div>        
@@ -173,29 +173,11 @@
                                 <label for="startdate">From Date:</label>
                                 <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="startdate" id="startdate" value="{{$selected_startdate}}">
                             </div>
-                            {{-- JQuery script for date picker --}}
-                            <script type="text/javascript">
-                                $(document).ready(function(){
-                                 $('#startdate').datepicker({
-                                  "format": "yyyy-mm-dd",
-                                  "keyboardNavigation": true
-                                 }); 
-                                });
-                                </script>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="enddate">To Date:</label>
                                 <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="enddate" id="enddate" value="{{$selected_enddate}}">
-                            {{-- JQuery script for date picker --}}
-                            <script type="text/javascript">
-                                $(document).ready(function(){
-                                 $('#enddate').datepicker({
-                                  "format": "yyyy-mm-dd",
-                                  "keyboardNavigation": true
-                                 }); 
-                                });
-                                </script>
                             </div>
                             <input type="hidden" name="size" id="size" value="{{$user_prefs->results_per_page}}">
                         </div>
@@ -214,11 +196,11 @@
             </div>
         </div>
  </div>
-
-    <script type="text/javascript">
-        $('.date').datepicker({  
-           format: 'mm-dd-yyyy'
-         });  
-    </script>
 </div>
+@endsection
+
+@section('scripts')
+    <script>
+        window.onload=textEntryDisabler;
+    </script>
 @endsection

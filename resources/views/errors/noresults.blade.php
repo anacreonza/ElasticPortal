@@ -3,9 +3,7 @@
     @component('layouts.navbar')
     @endcomponent
 @endsection
-<?php 
 
-?>
 @section('content')
 <div class="container">
         @component('results.navlinks')   

@@ -347,3 +347,17 @@ div.details {
 .text-preview h2 {
     font-size: 1.1rem;
 }
+.error-block {
+    display: inline-block;
+    color: white;
+    background-color: lightcoral;
+    padding: 5px;
+    border-radius: 5px;
+}
+.ok-block {
+    display: inline-block;
+    color: white;
+    background-color: limegreen;
+    padding: 5px;
+    border-radius: 5px;
+}

@@ -14,13 +14,17 @@ $query_body = json_encode($body, JSON_PRETTY_PRINT);
 ?>
 @section('content')
 <div class="container">
-    <p><a href="javascript:history.back()">Back</a> | <a href="/">Advanced Search</a></p>
-    <div class="items-container">
-        <h2>Current Query:</h2>
-        @if (isset($query_string['index']))
+    <div class="linkbar"><a href="/home">Back to Admin page</a></div>
+    <div class="card">
+        <div class="card-header">
+            Current Query
+        </div>
+        <div class="card-body">
+            @if (isset($query_string['index']))
             <pre>GET {{$query_string['index']}}/_search</pre>
-        @endif
+            @endif
         <pre>{{$query_body}}</pre>
+        </div>
     </div>
 </div>
 @endsection

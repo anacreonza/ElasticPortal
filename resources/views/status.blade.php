@@ -37,9 +37,7 @@ pri.store.size
 
 @section('content')
 <div class="container">
-
     <div class="linkbar"><a href="/home">Back to Admin page</a></div>
-
     <div class="card">
         <div class="card-header">Indices Status</div>
         <div class="card-body">

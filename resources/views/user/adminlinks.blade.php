@@ -91,4 +91,12 @@
             <div class="item-description">Log Viewer</div>
         </a>
     </div>
+    <div class="control-panel-item">
+        <a href="/querybuilder">
+            <div class="icon-block">
+                <i class="fas fa-shapes big-icons"></i>
+            </div>
+            <div class="item-description">Query Builder</div>
+        </a>
+    </div>
 </div>

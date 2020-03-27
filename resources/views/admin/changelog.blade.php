@@ -2,8 +2,13 @@
 @section('header')
 <title>Change Log</title>
 @endsection
+@section('navbar')
+    @component('layouts.navbar')
+    @endcomponent
+@endsection
 @section('content')
 <div class="container">
+    <br>
     <div class="items-container">
         <p>21-Feb-2020:</p>
         <ul>
