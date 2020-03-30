@@ -9,7 +9,7 @@
 @section('content')
 <div class="container">
     <br>
-    <div class="items-container">
+    <div class="items-container" style="padding-top: 2rem; padding-bottom: 2rem">
         <p>21-Feb-2020:</p>
         <ul>
             <li>Included image links in articles. Low-resolution images are requested to keep loading times down.</li>  
@@ -18,6 +18,7 @@
             <li>Fixed crash relating to last item in list not finding the next story for the pagination button.</li>
             <li>Moved to Git-based deployment system to try to speed up future deployments.</li>
         </ul>
+        <hr>
         <p>9-Dec-2019:</p>
         <ul>
             <li>Lowered minimum score (to 10) for results to prevent common words from not appearing.</li>
@@ -34,6 +35,12 @@
             <li>Article text is now generated using an XSLT transform - to improve accuracy. Still not ideal as picture caption headlines are not distinguished from regular headlines, and articles that have nothing but picture caption text may display blank.</li>
             <li>Enabled config cache and removed unused libraries to improve speed.</li>
             <li>Updated site to handle the ASPSeek legacy index.</li>
+        </ul>
+        <hr>
+        <p>30-Mar-2020</p>
+        <ul>
+            <li>Finally got text-free searches to work. Multiple changes all over the site to accommodate the change.</li>
+            <li>Replaced bad preview links for PDF graphics with generic PDF document icon.</li>
         </ul>
     </div>
 </div>

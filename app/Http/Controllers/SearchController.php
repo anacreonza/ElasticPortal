@@ -523,11 +523,10 @@ class SearchController extends Controller
         Session::put('terms', $terms);
 
         # Put the query into the session:
-        Session::put('query_string', $query);
+        $query_json = json_encode($query, JSON_PRETTY_PRINT);
+        Session::put('query_json', $query_json);
 
-        $query_string_json = \json_encode($query);
-
-        // die(SearchController::var_dump2($query_string_json));
+        #die(SearchController::var_dump2($query_json));
 
         # Build URL for Elastic server from config
         $server_address = Config::get('elastic.server.ip');
@@ -579,6 +578,18 @@ class SearchController extends Controller
         // Converted all searches to multi_match as it's better than just simple query_string. Need to add the fields for images to the fields list however.
         # Build query clause
         function build_query_clause($terms){
+
+            $searchable_fields = [
+                'CONTENT.*',
+                'SYSATTRIBUTES.PROPS.SUMMARY^2', # Boost up summary for articles.
+                'SYSTEM.ALERTPATH',
+                'OBJECTINFO.NAME',
+                'ATTRIBUTES.METADATA.PAPER.PUB_CAPTION',
+                'ATTRIBUTES.METADATA.GENERAL.DOCAUTHOR',
+                'ATTRIBUTES.METADATA.INFOIMAGE.COPYRIGHT_NOTICE',
+                'ATTRIBUTES.METADATA.GENERAL.DOCKEYWORD^2' # Boost up keywords for images.
+            ];
+            
             // Cater for when user does not narrow search down at all.
             if ( $terms['match'] == 'alldocs' && 
                 $terms['type'] == 'All' && 
@@ -600,7 +611,7 @@ class SearchController extends Controller
                 $all_terms_string = \substr($all_terms_string, 5);
                 return $all_terms_string;
             }
-            function build_allwords_query_clause($terms){
+            function build_allwords_query_clause($terms, $searchable_fields){
                 // Need to add fields for image search to multi-match
                 $query_clause = [
                     'bool' => [
@@ -609,40 +620,38 @@ class SearchController extends Controller
                                 'query' => prepare_allwords_text_string($terms),
                                 'fuzziness' => 0,
                                 'type' => 'best_fields',
-                                'fields' => [
-                                    'CONTENT.*',
-                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
-                                ]
+                                'fields' => $searchable_fields
                             ]
-                        ],
-                        'filter' => [
-                            build_filter_clause($terms)
-                        ]                            
+                        ]                          
                     ]
                 ];
+                // Add filter if necessary.
+                if (build_filter_clause($terms)){
+                    $query_clause['bool']['filter'] = build_filter_clause($terms);
+                }
                 return $query_clause;
             }
-            function build_phrase_query_clause($terms){
+            function build_phrase_query_clause($terms, $searchable_fields){
                 $query_clause = [
                     'bool' => [
                         'must' => [
                             'multi_match' => [
                                 'query' => $terms['text'],
                                 'type' => 'phrase',
-                                'fields' => [
-                                    'CONTENT.*',
-                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
-                                ]
+                                'fields' => $searchable_fields
                             ]
-                        ],
-                        'filter' => [
-                            build_filter_clause($terms)
                         ]
                     ]
                 ];
+                // Add filter if necessary.
+                if (build_filter_clause($terms)){
+                    $query_clause['bool']['filter'] = [
+                        (build_filter_clause($terms))
+                    ];
+                }
                 return $query_clause;
             }
-            function build_anytext_query_clause($terms){
+            function build_anytext_query_clause($terms, $searchable_fields){
                 $query_clause = [
                     'bool' => [
                         'must' => [
@@ -650,17 +659,17 @@ class SearchController extends Controller
                                 'query' => $terms['text'],
                                 'fuzziness' => 'AUTO',
                                 'type' => 'best_fields',
-                                'fields' => [
-                                    'CONTENT.*',
-                                    'SYSATTRIBUTES.PROPS.SUMMARY^2'
-                                ]
+                                'fields' => $searchable_fields
                             ]
-                        ],
-                        'filter' => [
-                            build_filter_clause($terms)
                         ]
                     ]
                 ];
+                // Add filter if there needs to be one.
+                if (build_filter_clause($terms)){
+                    $query_clause['bool']['filter'] = [
+                        (build_filter_clause($terms))
+                    ];
+                }
                 return $query_clause;
             }
             function build_alldocs_query_clause($terms){
@@ -672,10 +681,19 @@ class SearchController extends Controller
                 // Type filter
                 if($terms['type'] != 'All'){
                     $key = $meta_keys['doctype'];
-                    $value = $terms['type'];
+                    if ($terms['type'] == "Articles"){
+                        $selected_types = Config::get('meta_mappings.doc_types.Articles');
+                    } elseif ($terms['type'] == "Images"){
+                        $selected_types = Config::get('meta_mappings.doc_types.Images');
+                    } else {
+                        $selected_types = Config::get('meta_mappings.doc_types.Other Documents');
+                    }
+                    
+                    $selected_types_search_string = implode(" OR ", $selected_types);
+
                     $query_clause['bool']['must'][] = [
                         'match' => [
-                            $key => $value
+                            $key => $selected_types_search_string
                         ]
                     ];
                 }
@@ -723,15 +741,15 @@ class SearchController extends Controller
             # High level logic:
             switch ($terms['match']) {
             case 'allwords':
-                $query_clause = build_allwords_query_clause($terms);
+                $query_clause = build_allwords_query_clause($terms, $searchable_fields);
                 break;
             
             case 'phrase':
-                $query_clause = build_phrase_query_clause($terms);
+                $query_clause = build_phrase_query_clause($terms, $searchable_fields);
                 break;
             
             case 'any':
-                $query_clause = build_anytext_query_clause($terms);
+                $query_clause = build_anytext_query_clause($terms, $searchable_fields);
                 break;
             
             case 'alldocs':
@@ -748,6 +766,7 @@ class SearchController extends Controller
         function build_filter_clause($terms){
             $meta_keys = Config::get('meta_mappings.keys');
             if ($terms['type'] != 'All'){
+                
                 if ($terms['type'] == "Articles"){
                     $selected_types = Config::get('meta_mappings.doc_types.Articles');
                 } elseif ($terms['type'] == "Images"){
@@ -755,31 +774,28 @@ class SearchController extends Controller
                 } else {
                     $selected_types = Config::get('meta_mappings.doc_types.Other Documents');
                 }
-     
+                // Use terms rather than term - so we can use an array of terms.
                 $type_filter = [
-                    'terms' => [ // Use terms rather than term - so we can use an array of terms.
+                    "terms" => [
                         $meta_keys['doctype'] => $selected_types
                     ]
                 ];
-                $filter_clause[] = $type_filter;
             }
      
             if ($terms['publication'] != 'All'){
-                $pub_filter = [
-                    'term' => [
+                $publication_filter = [
+                    "term" => [
                         $meta_keys['product'] => $terms['publication']
                     ]
                 ];
-                $filter_clause[] = $pub_filter;
             }
     
             if ($terms['category'] != 'All'){
                 $category_filter = [
-                    'term' => [
+                    "term" => [
                         $meta_keys['category'] => $terms['category']
                     ]
                 ];
-                $filter_clause[] = $category_filter;
             }
     
             if ($terms['startdate'] != '' || $terms['enddate'] != ''){
@@ -790,18 +806,33 @@ class SearchController extends Controller
                     $terms['enddate'] = 'now';
                 }
                 $date_range_filter = [
-                    'range' => [
+                    "range" => [
                         $meta_keys['issuedate'] => [
                             'gte' => $terms['startdate'],
                             'lte' => $terms['enddate']
                         ]
                     ]
                 ];
-                $filter_clause[] = $date_range_filter;
-            } else {
-                $date_range_filter = '';
             }
-            return $filter_clause;
+
+            if (isset($type_filter)) {
+                $filter_clause[] = $type_filter;
+            }
+            if (isset($publication_filter)){
+                $filter_clause[] = $publication_filter;
+            }
+            if (isset($category_filter)){
+                $filter_clause[] = $category_filter;
+            }
+            if (isset($date_range_filter)){
+                $filter_clause[] = $date_range_filter;
+            }
+            if ($filter_clause) {
+                #die(SearchController::var_dump2(\json_encode($filter_clause, JSON_PRETTY_PRINT)));
+                return $filter_clause;
+            } else {
+                return false;
+            }
         }
         // Pagination stuff
         if (isset($terms['from'])){
@@ -860,7 +891,7 @@ class SearchController extends Controller
         Session::put('query_string', $query);
 
         $json_query = json_encode($query, JSON_PRETTY_PRINT);
-        // die(SearchController::var_dump2($json_query));
+        #die(SearchController::var_dump2($json_query));
         return $query;
     }
     public function basic_search(Request $request){
@@ -926,6 +957,8 @@ class SearchController extends Controller
         Session::put('total_hits', $results['hits']['total']);
 
         $doctype_counts = $this->classify_results($results);
+
+        Session::put('selected_match_option', $terms['match']);
 
         if ($terms['publication'] != 'All') {
             Session::put('selected_pub', $terms['publication']);
@@ -1074,8 +1107,10 @@ class SearchController extends Controller
         $xsl = $xslproc->importStylesheet($xsl);
         $xslproc->setParameter(null, "", "");
         $html = $xslproc->transformToDoc($xml);
-        return $html->saveHTML();
-
+        $htmlstring = $html->saveHTML();
+        # Replace incorrect bullet
+        $htmlstring = \str_replace('<p>)', '<p>&bull; ', $htmlstring);
+        return $htmlstring;
     }
 
     public static function prepare_aspseek_html($html){

@@ -8,7 +8,7 @@ use App\Http\Controllers\UserController;
 class CookieController extends Controller
 {
     static function initialise_cookie(){
-        $cookie_lifespan = time()+(3600*12); // last number = number of hours
+        $cookie_lifespan = time()+(3600*24); // last number = number of hours
 
         $user_prefs = UserController::get_user_prefs();
 

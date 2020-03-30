@@ -17,7 +17,7 @@
     $selected_maxperpage = Session::get('maxperpage');
     $selected_minrelevance = Session::get('minrelevance');
     $selected_author = Session::get('author');
-    $selected_match_option = Session::get('match');
+    $selected_match_option = Session::get('selected_match_option');
     if (!isset($selected_match_option)){
         $selected_match_option = 'allwords';
     }
@@ -171,13 +171,13 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="startdate">From Date:</label>
-                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="startdate" id="startdate" value="{{$selected_startdate}}">
+                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" autocomplete="off" name="startdate" id="startdate" value="{{$selected_startdate}}">
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="enddate">To Date:</label>
-                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" name="enddate" id="enddate" value="{{$selected_enddate}}">
+                                <input class="form-control" data-provide="datepicker" data-date-format="yyyy-mm-dd" type="text" autocomplete="off" name="enddate" id="enddate" value="{{$selected_enddate}}">
                             </div>
                             <input type="hidden" name="size" id="size" value="{{$user_prefs->results_per_page}}">
                         </div>
@@ -201,6 +201,7 @@
 
 @section('scripts')
     <script>
+        $('.datepicker').datepicker();
         window.onload=textEntryDisabler;
     </script>
 @endsection

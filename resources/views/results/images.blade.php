@@ -58,7 +58,14 @@
             @foreach($display_array as $item)
                 <div class="image-item">
                     <a href="/imageviewer/{{$item['loid']}}">
-                        <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
+                        @if (\strpos($item['path'], 'pdf'))
+                            <img src="/logos/generic_pdf_icon.png" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
+                            <div class="overlay">
+                            <div class="text">{{$item['filename']}}</div>
+                            </div>
+                        @else
+                            <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
+                        @endif
                     </a>
                 </div>
             @endforeach

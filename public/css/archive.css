@@ -227,6 +227,15 @@ input::placeholder {
     backface-visibility: hidden;
     margin: 6px;
 }
+.overlay {
+    display: inline;
+}
+.text {
+    display: inline;
+    color: grey;
+    top: 50%;
+    left: 50%;
+}
 .image-big-preview {
     max-width: 600px;
 }

@@ -112,7 +112,7 @@
 		<div class="photo-group"><xsl:apply-templates select="node()"/></div>
 	</xsl:template>
 
-	<!-- Convert the fg-photo tag into an img-->
+	<!-- Convert the fg-photo tag into an img -->
 	<xsl:template match="fg-photo">
 		<div class="story-image"><a href="http://152.111.25.125:4700{@fileref}"><img class="fg-photo" src="http://152.111.25.125:4700{@fileref}&amp;f=image_lowres" width="590px" alt="Image"></img></a></div>
 	</xsl:template>
