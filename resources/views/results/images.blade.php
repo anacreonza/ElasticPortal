@@ -18,7 +18,7 @@
     $hits_count = Session::get('item_counts');
     $total_items = $hits_count['images'];
     $page_offset = $page - 1;
-    $terms['from'] = $terms['size'] * $page_offset + 1;
+    $terms['from'] = $terms['size'] * $page_offset;
     if($terms['from'] >= $total_items){
         $terms['from'] = $total_items;
     }
@@ -56,17 +56,23 @@
                 @endslot
             @endcomponent
             @foreach($display_array as $item)
-                <div class="image-item">
-                    <a href="/imageviewer/{{$item['loid']}}">
-                        @if (\strpos($item['path'], 'pdf'))
-                            <img src="/logos/generic_pdf_icon.png" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
-                            <div class="overlay">
-                            <div class="text">{{$item['filename']}}</div>
-                            </div>
-                        @else
-                            <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" height="220px" class="image-preview" name="image">
-                        @endif
-                    </a>
+                <div class="card image-card">
+                    <div class="card-header">{{$item['filename']}}</div>
+                    <div class="card-body image-preview-card">
+                        <div class="image-preview-container">
+                            <a href="/imageviewer/{{$item['loid']}}">
+                                @if (\strpos($item['path'], 'pdf'))
+                                    <img src="/logos/generic_pdf_icon.png" alt="{{$item['path']}}" name="image" class="image-thumbnail">
+                                @else
+                                    <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" name="image" class="image-thumbnail">
+                                @endif
+                            </a>
+                        </div>
+                        <div class="metadata-preview-block">
+                            @component('meta.image', ['meta' => $item]);
+                            @endcomponent
+                        </div>
+                    </div>
                 </div>
             @endforeach
             @component('results.pagination')

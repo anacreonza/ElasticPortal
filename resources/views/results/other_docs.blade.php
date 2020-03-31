@@ -18,7 +18,7 @@
     $hits_count = Session::get('item_counts');
     $total_items = $hits_count['other_docs'];
     $page_offset = $page - 1;
-    $terms['from'] = $terms['size'] * $page_offset + 1;
+    $terms['from'] = $terms['size'] * $page_offset;
     if($terms['from'] >= $total_items){
         $terms['from'] = $total_items;
     }
@@ -61,25 +61,9 @@
                     {{$item['filename']}}
                     <span class="view-link"><a href="http://152.111.25.125:4700{{$item['path']}}">View</a></span>
                 </div>
-                <div class="card-footer">
-                    <div class="meta-footer">
-                        <div><span class="item-label">LOID: </span>{{$item['loid']}}</div>
-                        <div><span class="item-label">Filename: </span>{{$item['filename']}}</div>
-                        <div><span class="item-label">Score: </span>{{$item['score']}}</div>
-                        @if(isset($item['publication']))
-                        <div><span class="item-label">Source: </span>{{$item['publication']}}</div>
-                        @endif
-                        @if(isset($item['section']))
-                        <div><span class="item-label">Section: </span> {{$item['section']}}</div>
-                        @endif
-                        @if(isset($item['author']))
-                        <div><span class="item-label">Author: </span> {{$item['author']}}</div>
-                        @endif
-                        @if(isset($item['pubdate']))
-                        <div><span class="item-label">Publication Date: </span> {{$item['pubdate']}}</div>
-                        @endif
-                    </div>
-                    {{-- <a href="/metadump/{{$display_array[$i]['loid']}}">View metadata</a> --}}
+                <div class="card-body">
+                    @component('meta.otherdocs', ['meta' => $item])
+                    @endcomponent
                 </div>
             </div>
             @endforeach

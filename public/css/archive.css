@@ -119,15 +119,16 @@ p {
     background-color: white;
     margin: 5px;
 }
-.image-description {
-    display: inline;
-    flex-wrap: wrap;
+.image-big-preview {
+    width: 100%;
+}
+.metadata-preview-block {
+    display: grid;
+    grid-template-columns: 100px 7fr;
+    align-content: top;
     padding: 5px;
     margin: 5px;
-    text-align: left;
-}
-.image-description-text {
-    font-size: 11pt;
+    width: 100%;
 }
 .item-background {
     display: grid;
@@ -209,6 +210,7 @@ input::placeholder {
 }
 .item-label {
     color: cadetblue;
+    display: inline;
 }
 .pagi-center {
     text-align: center;
@@ -219,25 +221,23 @@ input::placeholder {
     background-color: gainsboro;
 }
 
-.image-preview {
+.image-preview-container {
+    display: flex;
     opacity: 1;
-    display: inline;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     transition: .5s ease;
     backface-visibility: hidden;
     margin: 6px;
+    width: 25%;
+    height: 25%;
+    margin-right: 24px;
 }
-.overlay {
-    display: inline;
+
+.image-thumbnail {
+    width: 100%;
 }
-.text {
-    display: inline;
-    color: grey;
-    top: 50%;
-    left: 50%;
-}
-.image-big-preview {
-    max-width: 600px;
+.image-preview-card {
+    display: flex;
 }
 .middle {
     transition: .5s ease;
@@ -322,7 +322,15 @@ div.photo-group {
     margin-top: 10px;
     margin-bottom: 10px;
 }
-
+.story-preview-card {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+}
+.story-preview-container {
+    margin: 5px;
+    padding-top: 5px;
+    padding-right: 20px;
+}
 .view-link {
     float: right;
 }

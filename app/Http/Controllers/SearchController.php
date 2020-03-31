@@ -45,51 +45,95 @@ class SearchController extends Controller
         }
     }
 
+    public static function prepare_image_metadata($hit){
+        $image_meta = [];
+        #die(dd($hit));
+        $image_meta['loid'] = $hit['_source']['REF'];
+        $image_meta['archive'] = $hit['_source']['ARCHIVE'];
+        $image_meta['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
+        if (isset($hit['_score'])){
+            $image_meta['score'] = $hit['_score'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
+            $image_meta['publication'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
+            $image_meta['type'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
+            $image_meta['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
+            $image_meta['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
+            $image_meta['date'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
+        }
+        if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
+            $image_meta['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'])){
+            $image_meta['caption'] = $hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'];        
+        } elseif (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'])) {
+            $image_meta['caption'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'])){
+            $image_meta['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'];        
+        } elseif (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
+            $image_meta['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
+            $publications = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
+            $image_meta['publication'] = SearchController::prepare_pubstring($publications);
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'])){
+            $image_meta['author'] = $hit['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'];        
+        } elseif (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])) {
+            $image_meta['author'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'])){
+            $image_meta['copyright'] = $hit['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'];        
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
+            if (isset($image_meta['caption']) && $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'] != $image_meta['caption']){
+                $image_meta['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];        
+            }
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
+            $image_meta['newspapers'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
+        }
+        if (isset($hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'])){
+            $image_meta['width'] = $hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'];
+        }
+        if (isset($hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'])){
+            $image_meta['height'] = $hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'];
+        }
+        if (isset($hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'])){
+            $image_meta['colourspace'] = $hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'];
+        }
+        if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
+            $date = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
+            $image_meta['date'] = date("d-M-Y", strtotime($date));
+        }
+        return $image_meta;
+    }
+
     public static function prepare_results(){
 
-        //Pick out the pieces fo the results that we need.
+        //Pick out the pieces of the results that we need.
 
         $results = Session::get('results');
         $hits = $results['hits'];
         $hits = $hits['hits'];
 
-        $display_array = array();
+        $display_array = [];
 
         foreach ($hits as $hit){
             $display_item = array();
             # Deal with the different types of items:
             $type = $hit['_source']['OBJECTINFO']['TYPE'];
             if (strpos($type, 'Image')){
-                $image['score'] = $hit['_score'];
-                $image['loid'] = $hit['_source']['REF'];
-
-                $image['archive'] = $hit['_source']['ARCHIVE'];
-                $image['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
-                    $image['publication'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
-                } else {
-                    $image['publicaton'] = "No publication info.";
-                }
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
-                    $image['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
-                } else {
-                    $image['source'] = "No source info.";
-                }
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
-                    $image['keywords'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];
-                } else {
-                    $image['keywords'] = "No keywords.";
-                }
-                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
-                    $image['date'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
-                } else {
-                    $image['date'] = "No date info.";
-                }
-                if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
-                    $image['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
-                } else {
-                    $image['path'] = "No path info.";
-                }
+                $image = SearchController::prepare_image_metadata($hit);
                 array_push($display_array, $image);
             } elseif (strpos($type, 'Story')){
                 $story['loid'] = $hit['_source']['REF'];
@@ -98,13 +142,9 @@ class SearchController extends Controller
                 $story['filename'] = $hit['_source']['OBJECTINFO']['NAME'];
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
                     $story['source'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];
-                } else {
-                    $story['source'] = "No source info.";
                 }
                 if (isset($hit['_source']['CONTENT']['XMLFLAT'])){
                     $story['content'] = $hit['_source']['CONTENT']['XMLFLAT'];
-                } else {
-                    $story['content'] = "No content info.";
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])){
                     $story['author'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
@@ -125,8 +165,6 @@ class SearchController extends Controller
                 }
                 if (isset($hit['highlight'])){
                     $story['highlight'] = $hit['highlight'];
-                } else {
-                    $story['highlight'] = "No highlights found.";
                 }
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
                     $story['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
@@ -143,28 +181,23 @@ class SearchController extends Controller
                 if (isset($hit['_source']['SYSTEM']['ALERTPATH'])){
                     $pdf['path'] = $hit['_source']['SYSTEM']['ALERTPATH'];
                 }
+                if (isset($hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
+                    $pdf['type'] = $hit['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
+                }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'])){
                     $pubdate = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['DATEPUBLICATION'];
                     $pdf['pubdate'] = date("d-M-Y", strtotime($pubdate));
-                } else {
-                    $pdf['pubdate'] = "No date info found.";
                 }
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'])){
                     $pdf['publication'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['PRODUCT'];        
-                } else {
-                    $pdf['publication'] = "No source info found.";
                 }
 
                 if (isset($hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['SECTION'])){
                     $pdf['section'] = $hit['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['SECTION'];
-                } else {
-                    $pdf['section'] = "No section info found.";
                 }
 
                 if (isset($hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['DOCUMENTINFO']['AUTHOR'])){
                     $pdf['author'] = $hit['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['DOCUMENTINFO']['AUTHOR'];
-                } else {
-                    $pdf['author'] = "No author info found.";
                 }
 
                 if ($pdf){
@@ -275,42 +308,6 @@ class SearchController extends Controller
     }
 
     public function get_types(){
-        
-        // $cached_types = Session::get('types');
-
-        // if (isset($cached_types)){
-        //     return $cached_types;
-        // } elseif (isset($_COOKIES['Types'])){
-        //     $doctypes_json = $_COOKIE['Types'];
-        //     $doctype_list = \json_decode($doctypes_json);
-        //     return $doctype_list;
-        // }
-
-        // $doc_type_key = Config::get('meta_mappings', 'doctype_exact');
-        // $params = [
-        //     'body' => [
-        //         'aggs' => [
-        //             'document_types' => [
-        //                 'terms' => [
-        //                     'field' => $doc_type_key,
-        //                     'size' => 20
-        //                 ]
-        //             ]
-        //         ]
-        //     ]
-        // ];
-        // $doctypes = $this->elasticsearch->search($params);
-        // $types = $doctypes['aggregations']['document_types']['buckets'];
-        // $doctype_list[] = 'All';
-        // foreach ($types as $type){
-        //     $typename = $type['key'];
-        //     $typename = trim($typename);
-        //     $typename = \strtolower($typename);
-        //     if (!\in_array($typename, $doctype_list)){
-        //         $doctype_list[] = $typename;
-        //     }
-        // }
-
         // Retrieve document types array from config. Use a static list because the types don't change that much.
         $doctype_array = Config::get("meta_mappings.doc_types");
         $doctype_keys = array_keys($doctype_array);
@@ -877,7 +874,7 @@ class SearchController extends Controller
                     'fields' => [
                         'CONTENT.XMLFLAT' => new \stdClass() # Needs empty object - won't accept empty array.
                     ],
-                    'fragment_size' => 200
+                    'fragment_size' => 300
                 ],
                 'size' => $terms['size'],
                 // 'min_score' => 10
@@ -951,7 +948,7 @@ class SearchController extends Controller
         ];
         $results = SearchController::run_search($terms);
 
-        #die(SearchController::var_dump2($results));
+        #die(dd($results));
         # Then return the view - the view itself will trigger the actual content search.
 
         Session::put('total_hits', $results['hits']['total']);
@@ -1012,7 +1009,7 @@ class SearchController extends Controller
         dump($response);
     }
 
-    public function prepare_pubstring($publications){
+    public static function prepare_pubstring($publications){
 
         $pub_string = '';
 
@@ -1051,7 +1048,7 @@ class SearchController extends Controller
         $story_data['filename'] = $metadata['_source']['OBJECTINFO']['NAME'];
         if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
             $publications = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
-            $story_data['publication'] = $this->prepare_pubstring($publications);
+            $story_data['publication'] = SearchController::prepare_pubstring($publications);
         }
         if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
             $story_data['type'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
@@ -1134,7 +1131,7 @@ class SearchController extends Controller
         return $body;
     }
 
-    public function prepare_image_meta($loid){
+    public function get_image_meta($loid){
         $images_server_ip = Config::get('elastic.content_server.ip');
         $images_server_port = Config::get('elastic.content_server.port');
         $images_server_url = 'http://' . $images_server_ip . ':' . $images_server_port;
@@ -1145,80 +1142,8 @@ class SearchController extends Controller
             die('Unable to retrieve metadata.');
         }
 
-        $image_data['loid'] = $loid;
-        $image_data['index'] = $metadata['_index'];
-        if (isset($metadata['_source']['SYSTEM']['ALERTPATH'])){
-            $image_path = $metadata['_source']['SYSTEM']['ALERTPATH'];
-        } else {
-            $image_path = "unable to read path.";
-        }
-
-        $image_data['url'] = $images_server_url . $image_path;
-
-        // Check if metadata differs between index. Maybe that is why it's sometimes PAPER and sometimes GENERAL
-
-        if (isset($metadata['_source']['OBJECTINFO']['NAME'])){
-            $image_data['filename'] = $metadata['_source']['OBJECTINFO']['NAME'];
-        } else {
-            $image_data['filename'] = "Unable to read name.";
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'])){
-            $image_data['type'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCTYPE'];
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'])){
-            $image_data['caption'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['PUB_CAPTION'];        
-        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'])) {
-            $image_data['caption'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_CAPTION'];
-        }
-        
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'])){
-            $image_data['source'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['CUSTOM_SOURCE'];        
-        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'])) {
-            $image_data['source'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['CUSTOM_SOURCE'];
-        }
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'])){
-            $publications = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS'];
-            $image_data['publication'] = $this->prepare_pubstring($publications);
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'])){
-            $image_data['author'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PAPER']['DOCAUTHOR'];        
-        } elseif (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'])) {
-            $image_data['author'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCAUTHOR'];
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'])){
-            $image_data['copyright'] = $metadata['_source']['ATTRIBUTES']['METADATA']['INFOIMAGE']['COPYRIGHT_NOTICE'];        
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'])){
-            if ( isset($image_data['caption']) && $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'] != $image_data['caption']){
-                $image_data['keywords'] = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DOCKEYWORD'];        
-            }
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'])){
-            $image_data['newspapers'] = $metadata['_source']['ATTRIBUTES']['METADATA']['PUBDATA']['PAPER']['NEWSPAPERS']['NEWSPAPER'];
-        }
-
-        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'])){
-            $image_data['width'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['WIDTH'];
-        }
-
-        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'])){
-            $image_data['height'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['HEIGHT'];
-        }
-
-        if (isset($metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'])){
-            $image_data['colourspace'] = $metadata['_source']['SYSATTRIBUTES']['PROPS']['IMAGEINFO']['COLORTYPE'];
-        }
-
-        if (isset($metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'])){
-            $date = $metadata['_source']['ATTRIBUTES']['METADATA']['GENERAL']['DATE_CREATED'];
-            $image_data['date'] = date("d-M-Y", strtotime($date));
-        }
+        $image_data = SearchController::prepare_image_metadata($metadata);
+        $image_data['url'] = $images_server_url . $image_data['path'];
 
         return $image_data;
     }
@@ -1249,7 +1174,7 @@ class SearchController extends Controller
         if (!isset($terms)){
             return redirect('/')->withErrors('Unable to retrieve search terms, probably due to an expired session. Please run your search again.');
         }
-        $metadata = $this->prepare_image_meta($loid);
+        $metadata = $this->get_image_meta($loid);
         return view('results.imageviewer')->with('metadata', $metadata);
     }
 
