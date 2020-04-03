@@ -58,8 +58,7 @@
             @foreach ($display_array as $item)
             <div class="card story-card">
                 <div class="card-header">
-                    {{$item['filename']}}
-                    <span class="view-link"><a href="http://152.111.25.125:4700{{$item['path']}}">View</a></span>
+                    <a href="http://152.111.25.125:4700{{$item['path']}}">{{$item['filename']}}</a>
                 </div>
                 <div class="card-body">
                     @component('meta.otherdocs', ['meta' => $item])

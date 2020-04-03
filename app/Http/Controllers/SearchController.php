@@ -824,7 +824,7 @@ class SearchController extends Controller
             if (isset($date_range_filter)){
                 $filter_clause[] = $date_range_filter;
             }
-            if ($filter_clause) {
+            if (isset($filter_clause)) {
                 #die(SearchController::var_dump2(\json_encode($filter_clause, JSON_PRETTY_PRINT)));
                 return $filter_clause;
             } else {
@@ -925,13 +925,13 @@ class SearchController extends Controller
 
         if ($terms['enddate'] != ''){
             $validated_data = $request->validate([
-                'enddate' => 'before:now',
+                'enddate' => 'before_or_equal:now',
                 'startdate' => 'required'
             ]);
         }
         if ($terms['startdate'] != ''){
             $validated_data = $request->validate([
-                'startdate' => 'before:enddate',
+                'startdate' => 'before_or_equal:enddate',
                 'enddate' => 'required'
             ]);
         }

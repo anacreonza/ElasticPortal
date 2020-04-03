@@ -57,7 +57,7 @@
             @endcomponent
             @foreach($display_array as $item)
                 <div class="card image-card">
-                    <div class="card-header">{{$item['filename']}}</div>
+                    <div class="card-header"><a href="/imageviewer/{{$item['loid']}}">{{$item['filename']}}</a></div>
                     <div class="card-body image-preview-card">
                         <div class="image-preview-container">
                             <a href="/imageviewer/{{$item['loid']}}">
@@ -68,10 +68,8 @@
                                 @endif
                             </a>
                         </div>
-                        <div class="metadata-preview-block">
-                            @component('meta.image', ['meta' => $item]);
-                            @endcomponent
-                        </div>
+                        @component('meta.image', ['meta' => $item]);
+                        @endcomponent
                     </div>
                 </div>
             @endforeach

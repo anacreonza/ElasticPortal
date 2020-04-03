@@ -57,13 +57,13 @@
             <div class="card story-card">
                 <div class="card-header">
                     @if (isset($item['title']))
-                        <span class="story-title">{{$item['title']}}</span>
-                    @endif
-                    @if (isset($item['loid']))
-                        <span class="view-link"><a href="/storyviewer/{{$item['loid']}}">View</a></span>
+                    <a href="/storyviewer/{{$item['loid']}}"><span class="story-title">{{$item['title']}}</span></a>
+                    @else
+                    <a href="/storyviewer/{{$item['loid']}}"><span class="story-title">No headline found in story</span></a>
                     @endif
                 </div>
                 <div class="card-body story-preview-card">
+                    @if (isset($item['highlight']))
                     <div class="story-preview-container">
                         @if (isset($item['highlight']['CONTENT.XMLFLAT']))
                             <span class="item-label">Highlights:</span>
@@ -72,6 +72,7 @@
                                 @endforeach
                         @endif
                     </div>
+                    @endif
                     <div class="metadata-preview-block">
                         @component('meta.story', ['meta' => $item])
                         @endcomponent                    

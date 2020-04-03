@@ -40,7 +40,15 @@
         <p>30-Mar-2020</p>
         <ul>
             <li>Finally got text-free searches to work. Multiple changes all over the site to accommodate the change.</li>
+            <li>Replaced weird bracket bullet coming from Methode with traditional bullet HTML entity.</li>
             <li>Replaced bad preview links for PDF graphics with generic PDF document icon.</li>
+            <li>Changed image browser view to show metadata as well. Might be better than the bricklayer google image search option.</li>
+        </ul>
+        <hr>
+        <p>3-Apr-2020</p>
+        <ul>
+            <li>Updated form validation to allow single-day searches.</li>
+            <li>Changed metadata view in all three item type browsers to CSS grid-based setup.</li>
         </ul>
     </div>
 </div>
