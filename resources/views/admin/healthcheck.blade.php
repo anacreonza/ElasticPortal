@@ -33,7 +33,7 @@
                     </tr>
                     <tr><td>Database Connection</td><td>
                         @if ($db_status)
-                            <span class="ok-block">Database connected</span>
+                            <span class="ok-block">Database connected</span>&nbsp;<a href="/admin/dbadmin"><button class="btn">Database Admin</button></a>
                         @else
                             <span class="error-block">No database connection found.</span>
                         @endif

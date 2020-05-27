@@ -15,6 +15,8 @@ use App\Article;
 use App\http\Controllers\SearchController;
 use App\http\Controllers\CookieController;
 
+Route::get('/home', 'HomeController@index')->name('home');
+
 Route::get('/index', function () {
     Article::createIndex($shards = null, $replicas = null);
 
@@ -82,10 +84,22 @@ Route::get('/user/delete/{id}', 'UserController@destroy')->middleware('auth');
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/adminhome', function(){
-    return view('adminhome');
+Route::prefix('/admin')->group(function(){
+    Route::get('/home', function(){
+        return view('admin.home');
+    });
+    Route::get('/logs', function(){
+        return view('admin.logs');
+    });
+    Route::get('/healthcheck', function(){
+        return view('admin.healthcheck');
+    });
+    Route::get('/dbadmin', 'DBAdminController@index');
+    Route::get('/download_db_csv', 'DbAdminController@download_csv');
+    Route::get('/migrate_db', 'DbAdminController@migrate');
+    Route::get('/logviewer', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
 });
+
 
 Route::get('/changelog', function(){
     return view('admin/changelog');
@@ -94,20 +108,10 @@ Route::get('/changelog', function(){
 Route::get('/phpinfo', function(){
     return view('user/phpinfo');
 });
-Route::get('/admin/logs', function(){
-    return view('admin/logs');
-});
-Route::get('/admin/logviewer', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
+
 Route::get('/upload/form', 'UploadController@uploadForm');
 Route::post('/upload/files', 'UploadController@uploadSubmit');
 Route::get('/clear_cookies', function(){
     CookieController::clear_cookies();
     return redirect('/');
-});
-
-Route::get('/healthcheck', function(){
-    return view('/admin/healthcheck');
-});
-Route::get('/querybuilder', function(){
-    return view('/admin/querybuilder');
 });

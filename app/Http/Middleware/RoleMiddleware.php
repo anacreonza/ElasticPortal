@@ -19,7 +19,7 @@ class RoleMiddleware
         $user = Auth::user();
 
         if ($user->role_id == "1"){
-            return redirect("/adminhome");
+            return redirect("/admin/home");
         }
         
         return $next($request);

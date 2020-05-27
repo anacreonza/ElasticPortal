@@ -73,7 +73,7 @@
                         @endif
                     </div>
                     @endif
-                    <div class="metadata-preview-block">
+                    <div class="metadata-preview-block-singlecolumn">
                         @component('meta.story', ['meta' => $item])
                         @endcomponent                    
                     </div>

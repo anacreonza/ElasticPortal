@@ -1,21 +1,28 @@
-@if (!isset($meta['highlight']))
-    <div class="metadata-preview-block-item"><span class="item-label">Filename: </span>{{$meta['filename']}}</div>
+@if (!isset($meta['filename']))
+    <div class="metadata-item-label">Filename: </div>
+    <div class="metadata-item">{{$meta['filename']}}</div>
 @endif
 @if (isset($meta['name']))
-    <div class="metadata-preview-block-item"><span class="item-label">Highlights: </span>{{$meta['name']}}</div>
+    <div class="metadata-item-label">Name: </div>
+    <div class="metadata-item">{{$meta['name']}}</div>
 @endif
 @if (isset($meta['score']))
-    <div class="metadata-preview-block-item"><span class="item-label">Score: </span>{{$meta['score']}}</div>
+    <div class="metadata-item-label">Score: </div>
+    <div class="metadata-item">{{$meta['score']}}</div>
 @endif
 @if (isset($meta['publication']))
-    <div class="metadata-preview-block-item"><span class="item-label">Publication: </span>{{$meta['publication']}}</div>
+    <div class="metadata-item-label">Publication: </div>
+    <div class="metadata-item">{{$meta['publication']}}</div>
 @endif
 @if (isset($meta['source']))
-    <div class="metadata-preview-block-item"><span class="item-label">Source: </span>{{$meta['source']}}</div>
+    <div class="metadata-item-label">Source: </div>
+    <div class="metadata-item">{{$meta['source']}}</div>
 @endif
 @if (isset($meta['author']))
-    <div class="metadata-preview-block-item"><span class="item-label">Author: </span>{{$meta['author']}}</div>
+    <div class="metadata-item-label">Author: </div>
+    <div class="metadata-item">{{$meta['author']}}</div>
 @endif
 @if (isset($meta['date']))
-    <div class="metadata-preview-block-item"><span class="item-label">Date: </span>{{$meta['date']}}</div>
+    <div class="metadata-item-label">Date: </div>
+    <div class="metadata-item">{{$meta['date']}}</div>
 @endif
