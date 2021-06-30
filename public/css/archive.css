@@ -15,6 +15,9 @@ input[type="text"] {
 p {
     line-height: 1.4rem;
 }
+.container {
+    max-width: 90%;
+}
 .pic-caption {
     font-size: 12pt;
     display: inline;
@@ -144,6 +147,9 @@ p {
     margin: 5px;
     grid-template-columns: 2fr 3fr;
     grid-template-rows: min-content min-content min-content;
+}
+.meta-card {
+    margin-left: 2em;
 }
 .item-background {
     display: grid;

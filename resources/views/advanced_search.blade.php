@@ -91,12 +91,7 @@
                                 <select name="archive" id="archive" class="form-control">
                                     @foreach ($indices as $index)
                                         <option value="{{$index}}"
-                                        @if (!isset($terms['index']))
-                                            @if ($index == 'published@methcarch_eomjse11_arch')
-                                            selected
-                                            @endif
-                                        @endif
-                                        @if ($index == $terms['index'])
+                                        @if ($index == "published@methcarch_eomjse1_prd")
                                             selected
                                         @endif
                                         >{{$index}}</option>   
@@ -188,7 +183,7 @@
                 </form>
             </div>
             <div class="card-footer">
-                <p>* Still not working yet - sorry</p>
+                <p>* Still not working</p>
                 <p>Please note this site is still experimental and may be unstable.</p>
                 <p>Last updated 30-Mar-2020 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
                 <p><a href="https://teams.microsoft.com/l/channel/19%3a36587d4bf8b04cb59fa68cb1364dc80e%40thread.skype/General?groupId=d7bac466-3ddd-4d7b-b0df-5a4c1d477e8a&tenantId=01ea1ee8-0c15-4160-9922-f383f39a19be" target="_blank">Archive Site Teams Group</a></p>

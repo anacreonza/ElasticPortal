@@ -278,7 +278,9 @@ class SearchController extends Controller
             $indices_array = \json_decode($indices_json);
             return $indices_array;
         }
-        $status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
+        $server_address = Config::get('elastic.server.ip');
+        $server_port = Config::get('elastic.server.port');
+        $status_json_url = "http://" . $server_address . ":" . $server_port . '/_cat/indices?format=json';
         $status_json = file_get_contents($status_json_url);
         $status = json_decode($status_json);
         sort($status);
@@ -293,7 +295,11 @@ class SearchController extends Controller
         $indices_json = \json_encode($indices_array);
         Session::put('indices', $indices_array);
         setcookie('Indices', $indices_json, time()+(3600*12)); //3600 = 1 hour
-        return $indices_array;
+        if ($indices_array){
+            return $indices_array;
+        } else {
+            die("No indices");
+        }
     }
 
     public function advanced_search_form(){
@@ -888,7 +894,6 @@ class SearchController extends Controller
         Session::put('query_string', $query);
 
         $json_query = json_encode($query, JSON_PRETTY_PRINT);
-        #die(SearchController::var_dump2($json_query));
         return $query;
     }
     public function basic_search(Request $request){
@@ -1078,19 +1083,17 @@ class SearchController extends Controller
         // Need to remove illegal XML tag from file or DOMDocument has conniption fits.
 
         $illegal_tag = "<?xml-formTemplate /SysConfig/Templates/Son/Daily/story_brief.xpt?>";
-        $story_raw = file_get_contents($fixed_url);
+        $story_raw = $this->make_authenticated_request($fixed_url);
         $story_raw = \str_replace('xml-formTemplate', 'formTemplate', $story_raw);
     
         $story_obj = new \DOMDocument();
         $story_obj->loadXML($story_raw);
 
-        // $storyxml = file_get_contents($fixed_url);
-        // $storyxml = \str_replace('xml-formTemplate', 'formTemplate', $storyxml);
-
         $doc_content = $this->prepare_story_html($story_obj);
 
         $story_data['content'] = $doc_content;
-
+        // Just get the raw text out of the index.
+        // $story_data['content'] = $metadata['_source']['CONTENT']['XMLFLAT'];
         return $story_data;
         
     }
@@ -1108,6 +1111,19 @@ class SearchController extends Controller
         # Replace incorrect bullet
         $htmlstring = \str_replace('<p>)', '<p>&bull; ', $htmlstring);
         return $htmlstring;
+    }
+
+    function make_authenticated_request($url){
+        $username = Config::get('elastic.content_server.username');
+        $password = Config::get('elastic.content_server.password');
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+        $result = curl_exec($ch);
+        curl_close($ch);  
+        return $result;
     }
 
     public static function prepare_aspseek_html($html){
@@ -1149,18 +1165,27 @@ class SearchController extends Controller
     }
 
     public function get_meta_one($loid){
+        // Build up a one-time query to retrieve one item by its ID/LOID
         $query_string = Session::get('query_string');
         if (!isset($query_string)){
             return false;
         }
-        $index = $query_string['index'];
-        $server_address = Config::get('elastic.server.ip');
-        $server_port = Config::get('elastic.server.port');
-        $type = "EOM::File";
-        $item_url = "http://" . $server_address . ":" . $server_port . "/" . $index . "/" . $type  . "/" . $loid;
-        $metadata_json = file_get_contents($item_url);
-
-        $metadata = json_decode($metadata_json, JSON_PRETTY_PRINT);
+        $query = [
+            'query' => [
+                'term' => [
+                    '_id' => [
+                        'value' => $loid
+                    ]
+                ]
+            ]
+        ];
+        $query_json = json_encode($query);
+        $params = [
+            'index' => $query_string['index'],
+            'body' => $query_json
+        ];
+        $result = $this->elasticsearch->search($params);
+        $metadata = $result['hits']['hits'][0];
         return $metadata;
     }
 

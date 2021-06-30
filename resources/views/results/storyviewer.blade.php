@@ -21,7 +21,7 @@ $surrounding_loids = SearchController::get_next_and_previous_loid($story['loid']
     @endcomponent
     <main class="item-background">
         {!!$story['content']!!}
-        <aside>
+        <aside class="meta-card">
             @component('results.item-toolbar', ['type' => 'article', 'url' => $story['url'], 'surrounding_loids' => $surrounding_loids])         
             @endcomponent
             @component('meta.panel', ['meta' => $story])

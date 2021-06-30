@@ -7,8 +7,9 @@ CookieController::initialise_cookie();
 if (isset($_COOKIE['user_prefs'])){
     $user_prefs = \json_decode($_COOKIE['user_prefs']);
 }
-
-$status_json_url = "http://152.111.25.182:9200/_cat/indices?format=json";
+$server_address = Config::get('elastic.server.ip');
+$server_port = Config::get('elastic.server.port');
+$status_json_url = "http://" . $server_address . ":" . $server_port . '/_cat/indices?format=json';
 $status_json = file_get_contents($status_json_url);
 $status = json_decode($status_json);
 $appname = Config::get('app.name');
