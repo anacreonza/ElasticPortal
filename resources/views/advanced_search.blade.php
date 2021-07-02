@@ -12,7 +12,7 @@
     $selected_type = Session::get('selected_type');
     $selected_pub = Session::get('selected_pub');
     $selected_category = Session::get('selected_category');
-    $selected_sorting = Session::get('sorting');
+    $selected_sorting = Session::get('selected_sorting');
     $selected_maxresults = Session::get('maxresults');
     $selected_maxperpage = Session::get('maxperpage');
     $selected_minrelevance = Session::get('minrelevance');
@@ -155,9 +155,9 @@
                             <div class="form-group">
                                 <label for="sort-by">Sort By:</label>
                                 <select name="sort-by" id="sort=by" class="form-control">
-                                    <option value="date">Date (show newest items first)</option>
-                                    <option value="score" selected>Score (show most relevant items first)</option>
-                                    <option value="size">Size (show biggest items first)</option>
+                                    <option value="score" @if ($selected_sorting == 'score') selected @endif>Score (show most relevant items first)</option>
+                                    <option value="date" @if ($selected_sorting == 'date') selected @endif>Date (show newest items first)</option>
+                                    <option value="size" @if ($selected_sorting == 'size') selected @endif>Size (show biggest items first)</option>
                                 </select>
                             </div>
                         </div>
@@ -183,9 +183,9 @@
                 </form>
             </div>
             <div class="card-footer">
-                <p>* Still not working</p>
+                <p>* Not working</p>
                 <p>Please note this site is still experimental and may be unstable.</p>
-                <p>Last updated 30-Mar-2020 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
+                <p>Last updated 02-Jul-2021 by <a href="mailto:skinnear@media24.com">Stuart Kinnear</a></p>
                 <p><a href="https://teams.microsoft.com/l/channel/19%3a36587d4bf8b04cb59fa68cb1364dc80e%40thread.skype/General?groupId=d7bac466-3ddd-4d7b-b0df-5a4c1d477e8a&tenantId=01ea1ee8-0c15-4160-9922-f383f39a19be" target="_blank">Archive Site Teams Group</a></p>
                 <p><a href="/changelog">Change Log</a></p>
             </div>

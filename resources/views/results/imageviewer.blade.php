@@ -10,8 +10,7 @@ use \App\Http\Controllers\SearchController;
 $terms = Session::get('terms');
 $query_string = Session::get('query_string');
 $index = $query_string['index'];
-$image_url = str_replace(' ', '%20', $metadata['url']);
-$dimensions = getimagesize($image_url);
+$dimensions = getimagesize($preview);
 
 $width = $dimensions[0];
 $height = $dimensions[1];
@@ -34,11 +33,10 @@ $surrounding_loids = SearchController::get_next_and_previous_loid($metadata['loi
     @endcomponent
     <div class="item-background">
         <div class="content-preview">
-            <img src="{{$image_url}}?f=image_lowres" alt="" class="image-big-preview">
+            {{-- <img src="{{$image}}?f=image_lowres" alt="" class="image-big-preview"> --}}
+            <img src="{{$preview}}" alt="" class="image-big-preview">
         </div>
         <div>
-            @component('results.item-toolbar', ['type' => 'image', 'url' => $image_url, 'surrounding_loids' => $surrounding_loids])         
-            @endcomponent
             @component('meta.panel', ['meta' => $metadata])
             @endcomponent
         </div>

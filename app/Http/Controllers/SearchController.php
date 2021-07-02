@@ -15,6 +15,7 @@ use DOMDocument;
 use App\User;
 use App\Http\Controllers\CookieController;
 use App\Http\Controllers\UserController;
+use GuzzleHttp\Client;
 
 class SearchController extends Controller
 {
@@ -962,6 +963,8 @@ class SearchController extends Controller
 
         Session::put('selected_match_option', $terms['match']);
 
+        Session::put('selected_sorting', $terms['sort-by']);
+
         if ($terms['publication'] != 'All') {
             Session::put('selected_pub', $terms['publication']);
         } else {
@@ -990,7 +993,6 @@ class SearchController extends Controller
         } else {
             Session::put('selected_type', '');
         }
-
         if ($doctype_counts['stories'] > 0){
             return redirect('/results/stories/1');
         } elseif ($doctype_counts['images'] > 0) {
@@ -1028,7 +1030,8 @@ class SearchController extends Controller
                 }
             }
             $pub_array = array_unique($pub_array);
-            $pub_string = implode(", ", $pub_array);
+            $pub_string = $pub_array[0];
+            // $pub_string = implode(", ", $pub_array);
             
         } else {
             $pub_string = $publications;
@@ -1083,7 +1086,7 @@ class SearchController extends Controller
         // Need to remove illegal XML tag from file or DOMDocument has conniption fits.
 
         $illegal_tag = "<?xml-formTemplate /SysConfig/Templates/Son/Daily/story_brief.xpt?>";
-        $story_raw = $this->make_authenticated_request($fixed_url);
+        $story_raw = $this->get_raw_story($fixed_url);
         $story_raw = \str_replace('xml-formTemplate', 'formTemplate', $story_raw);
     
         $story_obj = new \DOMDocument();
@@ -1113,17 +1116,47 @@ class SearchController extends Controller
         return $htmlstring;
     }
 
-    function make_authenticated_request($url){
-        $username = Config::get('elastic.content_server.username');
-        $password = Config::get('elastic.content_server.password');
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        $result = curl_exec($ch);
-        curl_close($ch);  
-        return $result;
+    function get_raw_story($url){
+        $client = new Client([
+            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
+            'timeout' => 15.0,
+        ]);
+        $response = $client->get($url);
+        $body = $response->getBody();
+        return $body;
+    }
+
+    function get_image($url){
+        $client = new Client([
+            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
+            'timeout' => 15.0,
+        ]);
+        $response = $client->get($url);
+        $data = $response->getBody()->getContents();
+        $image_data = 'data:image/png;base64,' . base64_encode($data);
+        return $image_data;
+    }
+    public static function get_image_preview($url){
+        $client = new Client([
+            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
+            'timeout' => 15.0,
+        ]);
+        $url = $url . "?f=image_lowres";
+        $response = $client->get($url);
+        $data = $response->getBody()->getContents();
+        $image_data = 'data:image/png;base64,' . base64_encode($data);
+        return $image_data;
+    }
+    public static function get_image_thumb($url){
+        $client = new Client([
+            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
+            'timeout' => 8.0,
+        ]);
+        $url = $url . "?f=thumb";
+        $response = $client->get($url);
+        $data = $response->getBody()->getContents();
+        $image_data = 'data:image/png;base64,' . base64_encode($data);
+        return $image_data;
     }
 
     public static function prepare_aspseek_html($html){
@@ -1200,7 +1233,9 @@ class SearchController extends Controller
             return redirect('/')->withErrors('Unable to retrieve search terms, probably due to an expired session. Please run your search again.');
         }
         $metadata = $this->get_image_meta($loid);
-        return view('results.imageviewer')->with('metadata', $metadata);
+        // $image_data = $this->get_image($metadata['url']);
+        $preview_data = SearchController::get_image_preview($metadata['url']);
+        return view('results.imageviewer')->with('metadata', $metadata)->with('preview', $preview_data);
     }
 
     public function show_storyviewer($loid){

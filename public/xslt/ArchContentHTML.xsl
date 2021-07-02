@@ -51,6 +51,11 @@
 		<h1 class="headline"><xsl:apply-templates select="node()"/></h1>
 	</xsl:template>
 
+	<!-- Convert the ln tag into the headline	 -->
+	<xsl:template match="subhead">
+		<h2 class="subhead"><xsl:apply-templates select="node()"/></h2>
+	</xsl:template>
+
 	<!-- Convert the doc tag to a div - also need to deal with the language attribute -->
 	<xsl:template match="doc">
 		<div class="doc" language="{@xml:lang}"><xsl:apply-templates select="node()"/></div>

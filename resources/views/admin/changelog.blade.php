@@ -10,6 +10,15 @@
 <div class="container">
     <br>
     <div class="items-container" style="padding-top: 2rem; padding-bottom: 2rem">
+        <p>02-Jul-2021</p>
+        <ul>
+            <li>What a long strange year it's been.</li>
+            <li>Changed article and image retrieval to use Guzzle library to allow for authenticated requests.</li>
+            <li>Made "search by" setting actually stick.</li>
+            <li>Changed image results view CSS to centre images while keeping meta-panel aligned.</li>
+            <li>Removed next and previous buttons from image viewer - this will be implemented in a better way in the future.</li>
+            <li>Changed CSS to try to identify sub-headings to make them smaller than normal headings.</li>
+        </ul>
         <p>21-Feb-2020:</p>
         <ul>
             <li>Included image links in articles. Low-resolution images are requested to keep loading times down.</li>  

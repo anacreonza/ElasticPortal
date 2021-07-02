@@ -22,7 +22,7 @@
     if($terms['from'] >= $total_items){
         $terms['from'] = $total_items;
     }
-
+    $image_server_url = Config::get('elastic.content_server.protocol') . '://' . Config::get('elastic.content_server.ip') . ':' .Config::get('elastic.content_server.port');
     // Remove aggregation terms from query
     $terms['aggs'] = Null;
     Session::put('terms', $terms);
@@ -60,13 +60,19 @@
                     <div class="card-header"><a href="/imageviewer/{{$item['loid']}}">{{$item['filename']}}</a></div>
                     <div class="card-body image-preview-card">
                         <div class="image-preview-container">
+                            <div>
                             <a href="/imageviewer/{{$item['loid']}}">
                                 @if (\strpos($item['path'], 'pdf'))
                                     <img src="/logos/generic_pdf_icon.png" alt="{{$item['path']}}" name="image" class="image-thumbnail">
                                 @else
-                                    <img src="http://152.111.25.125:4700{{$item['path']}}?f=image_lowres" alt="{{$item['path']}}" name="image" class="image-thumbnail">
-                                @endif
-                            </a>
+                                    @php
+                                        $url = $image_server_url . $item['path'];
+                                        $preview = SearchController::get_image_preview($url)
+                                    @endphp
+                                    <img src={{$preview}} name="image" class="image-thumbnail" >
+                                    @endif
+                                </a>
+                            </div>
                         </div>
                         @component('meta.image', ['meta' => $item]);
                         @endcomponent

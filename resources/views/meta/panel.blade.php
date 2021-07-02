@@ -1,8 +1,10 @@
 <aside class="card">
     <div class="card-header">
-        Metadata
+        Image Info
     </div>
     <div class="card-body">
+        {{-- @component('results.item-toolbar', ['type' => 'image', 'url' => $meta['url']])         
+        @endcomponent --}}
         <div class="meta-grid">
             @if (isset($meta['loid']))
             <div class="meta-table-div"><div class="metadata-item-label">LOID: </div></div>
@@ -26,7 +28,13 @@
     
             @if (isset($meta['publication']))
             <div class="meta-table-div"><div class="metadata-item-label">Publication: </div></div>
-            <div>{{$meta['publication']}}</div>
+            <div>
+                @if (is_array($meta['publication']))
+                    @foreach ($meta['publication'] as $pub) {{$pub . ' '}} @endforeach
+                @else
+                    {{$meta['publication']}}
+                @endif
+            </div>
             @endif
     
             @if (isset($meta['pageref']))
