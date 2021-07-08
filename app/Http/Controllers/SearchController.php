@@ -1126,7 +1126,7 @@ class SearchController extends Controller
         return $body;
     }
 
-    function get_image($url){
+    public static function get_image($url){
         $client = new Client([
             'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
             'timeout' => 15.0,

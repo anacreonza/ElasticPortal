@@ -67,9 +67,9 @@
                                 @else
                                     @php
                                         $url = $image_server_url . $item['path'];
-                                        $preview = SearchController::get_image_preview($url)
+                                        // $preview = SearchController::get_image_preview($url)
                                     @endphp
-                                    <img src={{$preview}} name="image" class="image-thumbnail" >
+                                    <img src= name="image" class="image-thumbnail" >
                                     @endif
                                 </a>
                             </div>
