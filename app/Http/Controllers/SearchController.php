@@ -1133,7 +1133,7 @@ class SearchController extends Controller
         ]);
         $response = $client->get($url);
         $data = $response->getBody()->getContents();
-        $image_data = 'data:image/png;base64,' . base64_encode($data);
+        $image_data = "data:image/png;base64," . base64_encode($data);
         return $image_data;
     }
     public static function get_image_preview($url){
@@ -1144,7 +1144,7 @@ class SearchController extends Controller
         $url = $url . "?f=image_lowres";
         $response = $client->get($url);
         $data = $response->getBody()->getContents();
-        $image_data = 'data:image/png;base64,' . base64_encode($data);
+        $image_data = "data:image/png;base64," . base64_encode($data);
         return $image_data;
     }
     public static function get_image_thumb($url){

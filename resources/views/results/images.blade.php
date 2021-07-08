@@ -22,7 +22,7 @@
     if($terms['from'] >= $total_items){
         $terms['from'] = $total_items;
     }
-    $image_server_url = Config::get('elastic.content_server.protocol') . '://' . Config::get('elastic.content_server.ip') . ':' .Config::get('elastic.content_server.port');
+    $image_server_url = Config::get('elastic.content_server.protocol') . "://" . Config::get('elastic.content_server.ip') . ":" .Config::get('elastic.content_server.port');
     // Remove aggregation terms from query
     $terms['aggs'] = Null;
     Session::put('terms', $terms);
