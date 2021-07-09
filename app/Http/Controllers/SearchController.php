@@ -1136,28 +1136,6 @@ class SearchController extends Controller
         $image_data = "data:image/png;base64," . base64_encode($data);
         return $image_data;
     }
-    public static function get_image_preview($url){
-        $client = new Client([
-            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
-            'timeout' => 15.0,
-        ]);
-        $url = $url . "?f=image_lowres";
-        $response = $client->get($url);
-        $data = $response->getBody()->getContents();
-        $image_data = "data:image/png;base64," . base64_encode($data);
-        return $image_data;
-    }
-    public static function get_image_thumb($url){
-        $client = new Client([
-            'auth' => [Config::get('elastic.content_server.username'), Config::get('elastic.content_server.password')],
-            'timeout' => 8.0,
-        ]);
-        $url = $url . "?f=thumb";
-        $response = $client->get($url);
-        $data = $response->getBody()->getContents();
-        $image_data = 'data:image/png;base64,' . base64_encode($data);
-        return $image_data;
-    }
 
     public static function prepare_aspseek_html($html){
 
@@ -1233,8 +1211,7 @@ class SearchController extends Controller
             return redirect('/')->withErrors('Unable to retrieve search terms, probably due to an expired session. Please run your search again.');
         }
         $metadata = $this->get_image_meta($loid);
-        // $image_data = $this->get_image($metadata['url']);
-        $preview_data = SearchController::get_image_preview($metadata['url']);
+        $preview_data = SearchController::get_image($metadata['url'] . "?f=image_lowres");
         return view('results.imageviewer')->with('metadata', $metadata)->with('preview', $preview_data);
     }
 

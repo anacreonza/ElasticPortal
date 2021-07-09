@@ -66,10 +66,10 @@
                                     <img src="/logos/generic_pdf_icon.png" alt="{{$item['path']}}" name="image" class="image-thumbnail">
                                 @else
                                     @php
-                                        $url = $image_server_url . $item['path'];
-                                        // $preview = SearchController::get_image_preview($url)
+                                        $url = $image_server_url . $item['path'] . "?f=image_lowres";
+                                        $preview = SearchController::get_image($url)
                                     @endphp
-                                    <img src= name="image" class="image-thumbnail" >
+                                    <img src={{$preview}} name="image" class="image-thumbnail" >
                                     @endif
                                 </a>
                             </div>
